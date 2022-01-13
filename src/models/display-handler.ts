@@ -19,8 +19,9 @@ export class DisplayHandler {
     }
 
     draw(
-      entity: any
+      entity: any,
     ) {
+        
         this.ctx.drawImage(
           entity.img, // The image to be cropped
           entity.cropX, //The x-coordinate of the source image
@@ -32,6 +33,8 @@ export class DisplayHandler {
           entity.width, // The width of the destination image.
           entity.height // The height of the destination image
         );
+        
+        this.ctx.filter = `saturate(50)%`;
     }
 
       // Affiche des informations sur le héros

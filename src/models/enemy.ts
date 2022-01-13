@@ -3,10 +3,37 @@ import { DisplayHandler } from "./display-handler";
 import { ImageHandler } from "./image-handler";
 import { Player } from "./player";
 import { Sprite } from "./sprite";
+import { SpriteImageCroper } from "./srpite-image-cropper";
 
 export class Enemy extends Sprite {
 
     shootedBullets = [];
+    spriteImageCroper = new SpriteImageCroper(
+        {
+            leftCycleLoop: [
+                {cropX:0,cropY:32},
+                {cropX:32,cropY:32},
+                {cropX:64,cropY:32}
+            ],
+             rightCycleLoop: [
+                {cropX:0,cropY:64},
+                {cropX:32,cropY:64},
+                {cropX:64,cropY:64}
+            ],
+            upCycleLoop: [
+                {cropX:0,cropY:96},
+                {cropX:32,cropY:96},
+                {cropX:0,cropY:96}
+            ],
+            downCycleLoop: [
+                {cropX:0,cropY:0},
+                {cropX:32,cropY:0},
+                {cropX:64,cropY:0}
+            ],
+        },
+        2
+    );
+    direction = 'south';
 
     constructor(
         attributes: any,
@@ -27,6 +54,8 @@ export class Enemy extends Sprite {
 
     update(){
 
+        //this.setDirection();
+        this.setCropCoordinates();
         this.angle++;
 
         this.behavior();
@@ -87,6 +116,20 @@ export class Enemy extends Sprite {
         );
         shootedBullet.setCoords({x: this.x, y: this.y});
         this.shootedBullets.push(shootedBullet);
+    }
+
+
+    setCropCoordinates(): void {
+        const { cropX, cropY } = this.spriteImageCroper.getCropCoordinate(this.direction);
+        this.cropX = cropX;
+        this.cropY = cropY;
+    }
+
+    setDirection(): void {
+
+        if (this.speedY < 0) this.direction = 'south';
+        if (this.speedY > 0) this.direction = 'north';
+        
     }
 
 
