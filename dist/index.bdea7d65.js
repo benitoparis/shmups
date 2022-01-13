@@ -477,10 +477,8 @@ const ctx1 = canvas1.getContext('2d');
 let gameAnimarionFrameRequestId;
 const displayHandler = new _displayHandler.DisplayHandler(ctx1);
 const imageHandler = new _imageHandler.ImageHandler();
-// let backgroundHandler1: BackgroundHandler;
-// let backgroundHandler2: BackgroundHandler;
-// let backgroundHandler3: BackgroundHandler;
-let backgroundHandler;
+let backgroundHandler1;
+let backgroundHandler2;
 let collisionHandler = new _collisionHandler.CollisionHandler();
 let enemies = [];
 let explosions = [];
@@ -493,13 +491,13 @@ function initPlayer() {
         y: 0,
         speedX: 2,
         speedY: 2,
-        reference: 'shootemup-spritesheet',
+        reference: 'hero',
         cropX: 0,
         cropY: 0,
-        width: 100,
-        height: 100,
-        cropWidth: 250,
-        cropHeight: 250
+        width: 64,
+        height: 64,
+        cropWidth: 32,
+        cropHeight: 32
     }, imageHandler, displayHandler);
 }
 function intWeaponAround() {
@@ -523,13 +521,13 @@ function initEnemy() {
         y: 0,
         speedX: 2,
         speedY: 0.1,
-        reference: 'shootemup-spritesheet',
+        reference: 'character_ememy_set_3',
         cropX: 0,
-        cropY: 500,
+        cropY: 0,
         width: 100,
         height: 100,
-        cropWidth: 250,
-        cropHeight: 250
+        cropWidth: 32,
+        cropHeight: 32
     }, imageHandler, displayHandler, player, function behavior() {
         if (this.player.centerX > this.x && this.player.centerX < this.x + this.width) this.y += 1;
     });
@@ -540,10 +538,8 @@ function initEnemy() {
     enemies.push(enemy);
 }
 function initBackground() {
-    backgroundHandler = new _backgroundHandler.BackgroundHandler(1, 'vertical-shooter-map', imageHandler, displayHandler);
-// backgroundHandler2 = new BackgroundHandler(0.2, 'CastleInsideLayer2', imageHandler,displayHandler);
-// backgroundHandler3 = new BackgroundHandler(0.4,'CastleInsideLayer3', imageHandler,displayHandler);
-// backgroundHandler1 = new BackgroundHandler(0.1,'tileset-ashland-a1', imageHandler, displayHandler);
+    backgroundHandler1 = new _backgroundHandler.BackgroundHandler(0.3, 'vertical-shooter-map', imageHandler, displayHandler, 0.1);
+    backgroundHandler2 = new _backgroundHandler.BackgroundHandler(0.3, 'vertical-shooter-map', imageHandler, displayHandler, 0.1);
 }
 function initSprites() {
     initPlayer();
@@ -584,29 +580,34 @@ canvas1.addEventListener('mousemove', (e)=>{
     });
 });
 window.addEventListener('keydown', (e)=>{
+    console.log('e.keyCode', e.keyCode);
     if (e.keyCode === 13) {
         //  initSound('http://benoit-dev-demo.com/audio/morceau_piano_jeu.wav');
         active = true;
         alert('active');
     }
     if (e.keyCode === 32) {
-        player.shoot(); // Space
+        player.shoot();
         initSound(getRandomShootSoundUrl());
+    }
+    if (e.keyCode === 82) {
+        console.log('player.direction ', player.direction);
+        if (player.direction === 'north') player.setDirection('south');
+        else player.setDirection('north');
     }
     return;
 });
 let delay = 0;
 const gameLoop = ()=>{
     // On clean le canvas
-    // backgroundHandler1.update();
-    // backgroundHandler1.draw();
-    // backgroundHandler2.update();
-    // backgroundHandler2.draw();
+    backgroundHandler1.update();
+    backgroundHandler1.draw();
+    backgroundHandler2.update();
+    backgroundHandler2.draw();
     // backgroundHandler3.update();
     // backgroundHandler3.draw();
-    backgroundHandler.update();
-    backgroundHandler.draw();
     // On affiche tous les éléments
+    player.update();
     player.draw();
     player.updateBullets();
     player.drawShootedBullets();
@@ -767,6 +768,30 @@ class ImageHandler {
                 belongsToWorldId: 1,
                 filePath: 'http://benoit-dev-demo.com/img/background/Vertical_Shooter_Full.png',
                 base64: false
+            },
+            {
+                type: 'sprites',
+                reference: 'hero',
+                belongsToMapsheetId: 1,
+                belongsToWorldId: 1,
+                filePath: 'http://benoit-dev-demo.com/img/sprites/heros8.png',
+                base64: false
+            },
+            {
+                type: 'sprites',
+                reference: 'Fire_Bullet_Pixel_All_Reverse',
+                belongsToMapsheetId: 1,
+                belongsToWorldId: 1,
+                filePath: 'http://benoit-dev-demo.com/img/tilesets/Fire_Bullet_Pixel_All_Reverse.png',
+                base64: false
+            },
+            {
+                type: 'sprites',
+                reference: 'character_ememy_set_3',
+                belongsToMapsheetId: 1,
+                belongsToWorldId: 1,
+                filePath: 'http://benoit-dev-demo.com/img/sprites/character_ememy_set_3.png',
+                base64: false
             }, 
         ];
         this.imagesAssets = [];
@@ -849,6 +874,7 @@ class DisplayHandler {
     draw(entity1) {
         this.ctx.drawImage(entity1.img, entity1.cropX, entity1.cropY, entity1.cropWidth, entity1.cropHeight, entity1.x, entity1.y, entity1.width, entity1.height // The height of the destination image
         );
+        this.ctx.filter = `saturate(50)%`;
     }
     // Affiche des informations sur le héros
     drawDatas(entity2) {
@@ -905,6 +931,7 @@ parcelHelpers.export(exports, "Player", ()=>Player
 );
 var _bullet = require("./bullet");
 var _sprite = require("./sprite");
+var _srpiteImageCropper = require("./srpite-image-cropper");
 class Player extends _sprite.Sprite {
     constructor(attributes, imageHandler, displayHandler){
         // By calling the super() method in the constructor method, we call the parent's constructor method
@@ -912,22 +939,97 @@ class Player extends _sprite.Sprite {
         this.shootedBullets = [];
         this.life = 10;
         this.score = 0;
+        this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper({
+            rightCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 64
+                },
+                {
+                    cropX: 32,
+                    cropY: 64
+                },
+                {
+                    cropX: 0,
+                    cropY: 64
+                },
+                {
+                    cropX: 64,
+                    cropY: 64
+                }
+            ],
+            leftCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 32
+                },
+                {
+                    cropX: 32,
+                    cropY: 32
+                },
+                {
+                    cropX: 0,
+                    cropY: 32
+                },
+                {
+                    cropX: 64,
+                    cropY: 32
+                }
+            ],
+            upCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 96
+                },
+                {
+                    cropX: 32,
+                    cropY: 96
+                },
+                {
+                    cropX: 0,
+                    cropY: 96
+                },
+                {
+                    cropX: 64,
+                    cropY: 96
+                }
+            ],
+            downCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 0
+                },
+                {
+                    cropX: 32,
+                    cropY: 0
+                },
+                {
+                    cropX: 0,
+                    cropY: 0
+                },
+                {
+                    cropX: 64,
+                    cropY: 0
+                }
+            ]
+        }, 3);
+        this.direction = 'north';
         this.shoot = ()=>{
             const shootedBullet = new _bullet.Bullet({
-                x: this.x,
+                x: this.centerX,
                 y: this.y,
                 speedX: 0,
-                speedY: -10,
-                reference: 'shootemup-spritesheet',
-                cropX: 250,
-                cropY: 1500,
-                cropWidth: 250,
-                cropHeight: 250,
-                width: 200,
-                height: 200
+                speedY: this.direction === 'north' ? -10 : 10,
+                reference: 'Fire_Bullet_Pixel_All_Reverse',
+                cropX: 162,
+                cropY: 116,
+                cropWidth: 30,
+                cropHeight: 30,
+                width: 40,
+                height: 40
             }, this.imageHandler, this.displayHandler);
             shootedBullet.setCoords({
-                x: this.x,
+                x: this.centerX,
                 y: this.y - 50
             });
             this.shootedBullets.push(shootedBullet);
@@ -946,9 +1048,20 @@ class Player extends _sprite.Sprite {
     drawPlayerDatas() {
         this.displayHandler.drawDatas(this);
     }
+    setCropCoordinates() {
+        const { cropX , cropY  } = this.spriteImageCroper.getCropCoordinate(this.direction);
+        this.cropX = cropX;
+        this.cropY = cropY;
+    }
+    update() {
+        this.setCropCoordinates();
+    }
+    setDirection(direction) {
+        this.direction = direction;
+    }
 }
 
-},{"./bullet":"9V7mY","./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"9V7mY":[function(require,module,exports) {
+},{"./bullet":"9V7mY","./sprite":"3Hinm","./srpite-image-cropper":"8EDiP","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"9V7mY":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Bullet", ()=>Bullet
@@ -1020,17 +1133,57 @@ class Sprite {
     }
 }
 
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"8EDiP":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "SpriteImageCroper", ()=>SpriteImageCroper
+);
+class SpriteImageCroper {
+    // rightCycleLoop = [{cropX:0,cropY:64}, {cropX:32,cropY:64},{cropX:0,cropY:64},{cropX:64,cropY:64}];
+    // leftCycleLoop = [{cropX:0,cropY:32}, {cropX:32,cropY:32},{cropX:0,cropY:32},{cropX:64,cropY:32}];
+    // upCycleLoop = [{cropX:0,cropY:96}, {cropX:32,cropY:96},{cropX:0,cropY:96},{cropX:64,cropY:96}];
+    // downCycleLoop = [{cropX:0,cropY:0}, {cropX:32,cropY:0},{cropX:0,cropY:0},{cropX:64,cropY:0}];
+    constructor(cycle, indexPerCycle){
+        this.indexPerCycle = indexPerCycle;
+        this.step = 0;
+        this.currentLoopIndex = 0;
+        this.cycle = cycle;
+    }
+    getCropCoordinate(direction) {
+        this.setCurrentLoopIndex();
+        // On détermine la positon x/y du crop du personnage
+        // if (direction === 'west'){ 
+        //     return this.leftCycleLoop[this.currentLoopIndex];
+        // } else if (direction === 'east'){
+        //     return this.rightCycleLoop[this.currentLoopIndex];
+        if (direction === 'north') return this.cycle.upCycleLoop[this.currentLoopIndex];
+        else if (direction === 'south') return this.cycle.downCycleLoop[this.currentLoopIndex];
+    }
+    // Méthode qui renseigne l'index de la séquence de marche
+    setCurrentLoopIndex() {
+        // On détermine quel sprite afficher
+        if (this.step < 20) this.step++;
+        else {
+            this.step = 0;
+            // Si l'index est supérieur au nombre de position possible on le repositionne à zero
+            if (this.currentLoopIndex === this.indexPerCycle) this.currentLoopIndex = 0;
+            else this.currentLoopIndex++;
+        }
+    }
+}
+
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"gCSiG":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BackgroundHandler", ()=>BackgroundHandler
 );
 class BackgroundHandler {
-    constructor(speed, reference, imageHandler, displayHandler){
+    constructor(speed, reference, imageHandler, displayHandler, alpha){
         this.speed = speed;
         this.reference = reference;
         this.imageHandler = imageHandler;
         this.displayHandler = displayHandler;
+        this.alpha = alpha;
         this.backgroundImageSet = [];
         this.x = 0;
         this.y = 0;
@@ -1088,12 +1241,72 @@ parcelHelpers.export(exports, "Enemy", ()=>Enemy
 );
 var _bullet = require("./bullet");
 var _sprite = require("./sprite");
+var _srpiteImageCropper = require("./srpite-image-cropper");
 class Enemy extends _sprite.Sprite {
     constructor(attributes, imageHandler, displayHandler, player, behavior){
         super(attributes, imageHandler, displayHandler);
         this.player = player;
         this.behavior = behavior;
         this.shootedBullets = [];
+        this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper({
+            leftCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 32
+                },
+                {
+                    cropX: 32,
+                    cropY: 32
+                },
+                {
+                    cropX: 64,
+                    cropY: 32
+                }
+            ],
+            rightCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 64
+                },
+                {
+                    cropX: 32,
+                    cropY: 64
+                },
+                {
+                    cropX: 64,
+                    cropY: 64
+                }
+            ],
+            upCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 96
+                },
+                {
+                    cropX: 32,
+                    cropY: 96
+                },
+                {
+                    cropX: 0,
+                    cropY: 96
+                }
+            ],
+            downCycleLoop: [
+                {
+                    cropX: 0,
+                    cropY: 0
+                },
+                {
+                    cropX: 32,
+                    cropY: 0
+                },
+                {
+                    cropX: 64,
+                    cropY: 0
+                }
+            ]
+        }, 2);
+        this.direction = 'south';
         this.shoot = ()=>{
             if (Math.random() < 0.99) return;
             // const ratio = (this.y - this.player.y) / (this.x - this.player.x);
@@ -1106,6 +1319,8 @@ class Enemy extends _sprite.Sprite {
         };
     }
     update() {
+        //this.setDirection();
+        this.setCropCoordinates();
         this.angle++;
         this.behavior();
     // if (Math.random() < 0.95) return;
@@ -1143,9 +1358,18 @@ class Enemy extends _sprite.Sprite {
         });
         this.shootedBullets.push(shootedBullet);
     }
+    setCropCoordinates() {
+        const { cropX , cropY  } = this.spriteImageCroper.getCropCoordinate(this.direction);
+        this.cropX = cropX;
+        this.cropY = cropY;
+    }
+    setDirection() {
+        if (this.speedY < 0) this.direction = 'south';
+        if (this.speedY > 0) this.direction = 'north';
+    }
 }
 
-},{"./bullet":"9V7mY","./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"7cHCu":[function(require,module,exports) {
+},{"./bullet":"9V7mY","./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV","./srpite-image-cropper":"8EDiP"}],"7cHCu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Explosion", ()=>Explosion

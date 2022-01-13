@@ -17,12 +17,14 @@ export class BackgroundHandler {
 
     // 48  fois 20
     mapSheetArray: number [] = [];
+    
 
     constructor(
         private speed: number,
         private reference: string,
         private imageHandler: ImageHandler,
-        private displayHandler: DisplayHandler
+        private displayHandler: DisplayHandler,
+        private alpha: number
     ){
 
         this.setImage();

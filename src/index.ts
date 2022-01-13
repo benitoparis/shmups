@@ -21,11 +21,9 @@ const ctx = canvas.getContext('2d');
 let gameAnimarionFrameRequestId: number;
 const displayHandler = new DisplayHandler(ctx);
 const imageHandler = new ImageHandler();
-// let backgroundHandler1: BackgroundHandler;
-// let backgroundHandler2: BackgroundHandler;
-// let backgroundHandler3: BackgroundHandler;
+let backgroundHandler1: BackgroundHandler;
+let backgroundHandler2: BackgroundHandler;
 
-let backgroundHandler: BackgroundHandler;
 let collisionHandler = new CollisionHandler();
 let enemies = [];
 let explosions = [];
@@ -40,13 +38,13 @@ function initPlayer(): void {
             y: 0,
             speedX: 2,
             speedY: 2,
-            reference: 'shootemup-spritesheet',
+            reference: 'hero',
             cropX: 0,
             cropY: 0,
-            width: 100,
-            height: 100,
-            cropWidth: 250,
-            cropHeight: 250
+            width: 64,
+            height: 64,
+            cropWidth: 32,
+            cropHeight: 32
         },
         imageHandler,
         displayHandler
@@ -81,13 +79,13 @@ function initEnemy(): void {
             y: 0,
             speedX: 2,
             speedY: 0.1,
-            reference: 'shootemup-spritesheet',
+            reference: 'character_ememy_set_3',
             cropX: 0,
-            cropY: 500,
+            cropY: 0,
             width: 100,
             height: 100,
-            cropWidth: 250,
-            cropHeight: 250
+            cropWidth: 32,
+            cropHeight: 32
         },
         imageHandler,
         displayHandler,
@@ -135,19 +133,21 @@ function initEnemy(): void {
 }
 
 function initBackground(): void {
-    backgroundHandler = new BackgroundHandler(
-        1,
+    backgroundHandler1 = new BackgroundHandler(
+        0.3,
         'vertical-shooter-map',
         imageHandler,
-        displayHandler
+        displayHandler,
+        0.1
     );
-    
 
-    // backgroundHandler2 = new BackgroundHandler(0.2, 'CastleInsideLayer2', imageHandler,displayHandler);
-    // backgroundHandler3 = new BackgroundHandler(0.4,'CastleInsideLayer3', imageHandler,displayHandler);
-
-    // backgroundHandler1 = new BackgroundHandler(0.1,'tileset-ashland-a1', imageHandler, displayHandler);
-
+    backgroundHandler2 = new BackgroundHandler(
+        0.3,
+        'vertical-shooter-map',
+        imageHandler,
+        displayHandler,
+        0.1
+    );
 }
 
 function initSprites() {
@@ -196,15 +196,27 @@ canvas.addEventListener('mousemove', (e: any)=> {
 });
 
 window.addEventListener('keydown', (e: any)=> {
+
+    console.log('e.keyCode', e.keyCode);
     
     if (e.keyCode === 13) { // Entrée
         //  initSound('http://benoit-dev-demo.com/audio/morceau_piano_jeu.wav');
         active = true;
         alert('active');
     }
-    if (e.keyCode === 32) {
-        player.shoot(); // Space
+    if (e.keyCode === 32) { // Space
+        player.shoot(); 
         initSound(getRandomShootSoundUrl());
+    }
+
+    if (e.keyCode === 82) { // touche R
+
+        console.log('player.direction ', player.direction);
+        if (player.direction === 'north') {
+            player.setDirection('south');
+        } else {
+            player.setDirection('north');
+        }
     }
 
     return;
@@ -216,19 +228,19 @@ const gameLoop = (): void => {
 
     // On clean le canvas
 
-    // backgroundHandler1.update();
-    // backgroundHandler1.draw();
+    backgroundHandler1.update();
+    backgroundHandler1.draw();
 
-    // backgroundHandler2.update();
-    // backgroundHandler2.draw();
+    backgroundHandler2.update();
+    backgroundHandler2.draw();
 
     // backgroundHandler3.update();
     // backgroundHandler3.draw();
 
-    backgroundHandler.update();
-    backgroundHandler.draw();
+   
   
     // On affiche tous les éléments
+    player.update();
     player.draw();
     player.updateBullets();
     player.drawShootedBullets();

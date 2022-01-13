@@ -2,12 +2,23 @@ import { Bullet } from "./bullet";
 import { DisplayHandler } from "./display-handler";
 import { ImageHandler } from "./image-handler";
 import { Sprite } from "./sprite";
+import { SpriteImageCroper } from "./srpite-image-cropper";
 
 export class Player extends Sprite {
 
     shootedBullets = [];
     life = 10;
     score = 0;
+    spriteImageCroper = new SpriteImageCroper(
+        {
+            rightCycleLoop: [{cropX:0,cropY:64}, {cropX:32,cropY:64},{cropX:0,cropY:64},{cropX:64,cropY:64}],
+            leftCycleLoop: [{cropX:0,cropY:32}, {cropX:32,cropY:32},{cropX:0,cropY:32},{cropX:64,cropY:32}],
+            upCycleLoop: [{cropX:0,cropY:96}, {cropX:32,cropY:96},{cropX:0,cropY:96},{cropX:64,cropY:96}],
+            downCycleLoop: [{cropX:0,cropY:0}, {cropX:32,cropY:0},{cropX:0,cropY:0},{cropX:64,cropY:0}],
+        },
+        3
+    );
+    direction = 'north';
 
     constructor(
         attributes: any,
@@ -27,22 +38,22 @@ export class Player extends Sprite {
     shoot = ()=> {
         const shootedBullet = new Bullet(
             {
-            x: this.x    ,
+            x: this.centerX   ,
             y: this.y,
             speedX: 0,
-            speedY: -10,
-            reference: 'shootemup-spritesheet',
-            cropX: 250, 
-            cropY: 1500,
-            cropWidth: 250,
-            cropHeight: 250,
-            width: 200,
-            height: 200
+            speedY: this.direction === 'north' ? -10 : 10,
+            reference: 'Fire_Bullet_Pixel_All_Reverse',
+            cropX: 162, 
+            cropY: 116,
+            cropWidth: 30,
+            cropHeight: 30,
+            width: 40,
+            height: 40
             },
             this.imageHandler,
-            this.displayHandler
+            this.displayHandler 
         );
-        shootedBullet.setCoords({x: this.x, y: this.y - 50});
+        shootedBullet.setCoords({x: this.centerX, y: this.y - 50});
         this.shootedBullets.push(shootedBullet);
     }
 
@@ -60,5 +71,19 @@ export class Player extends Sprite {
 
     drawPlayerDatas(): void {
         this.displayHandler.drawDatas(this);
+    }
+
+    setCropCoordinates(): void {
+        const { cropX, cropY } = this.spriteImageCroper.getCropCoordinate(this.direction);
+        this.cropX = cropX;
+        this.cropY = cropY;
+    }
+
+    update(){
+        this.setCropCoordinates();
+    }
+
+    setDirection(direction: string): void {
+        this.direction = direction;
     }
 }

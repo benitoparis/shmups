@@ -7,6 +7,9 @@ export class ImageHandler {
         {type: 'sprites', reference: 'explosion', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/sprites/explosion.png', base64: false},
         {type: 'sprites', reference: 'background1', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: '', base64: true},
         {type: 'sprites', reference: 'vertical-shooter-map', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/background/Vertical_Shooter_Full.png', base64: false},
+        {type: 'sprites', reference: 'hero', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/sprites/heros8.png', base64: false},
+        {type: 'sprites', reference: 'Fire_Bullet_Pixel_All_Reverse', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/tilesets/Fire_Bullet_Pixel_All_Reverse.png', base64: false},
+        {type: 'sprites', reference: 'character_ememy_set_3', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/sprites/character_ememy_set_3.png', base64: false},
 
     ];
     imagesAssets: HTMLImageElement[] = [];
