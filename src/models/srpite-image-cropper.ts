@@ -1,24 +1,19 @@
-export class SpriteImageCroper {
+import { CropCycles } from "../interfaces/cropCycles-interface";
+import { GameCharacterData } from "./game-character-data";
+
+export class SpriteImageCroper extends GameCharacterData {
 
     step = 0;
     currentLoopIndex = 0;
-    cycle: {
-        rightCycleLoop: {cropX:number,cropY:number}[]
-        leftCycleLoop: {cropX:number,cropY:number}[]
-        upCycleLoop: {cropX:number,cropY:number}[]
-        downCycleLoop: {cropX:number,cropY:number}[]
-    }
-    // rightCycleLoop = [{cropX:0,cropY:64}, {cropX:32,cropY:64},{cropX:0,cropY:64},{cropX:64,cropY:64}];
-    // leftCycleLoop = [{cropX:0,cropY:32}, {cropX:32,cropY:32},{cropX:0,cropY:32},{cropX:64,cropY:32}];
-    // upCycleLoop = [{cropX:0,cropY:96}, {cropX:32,cropY:96},{cropX:0,cropY:96},{cropX:64,cropY:96}];
-    // downCycleLoop = [{cropX:0,cropY:0}, {cropX:32,cropY:0},{cropX:0,cropY:0},{cropX:64,cropY:0}];
-
+    cycle: CropCycles
 
     constructor(
-        cycle,
+        characterName: string,
         private indexPerCycle: number
     ){
-        this.cycle = cycle;
+      super();
+
+      this.cycle = this.getCharacterData(characterName).cropCryle;
     }
 
     getCropCoordinate(direction: string): {cropX:number,cropY:number} {

@@ -467,6 +467,7 @@ var _collisionHandler = require("./models/collision-handler");
 var _enemy = require("./models/enemy");
 var _explosion = require("./models/explosion");
 var _around = require("./models/around");
+var _particule = require("./models/particule");
 //const canvas = document.getElementById('game') as HTMLCanvasElement;
 const canvas1 = createCanvasElement(960, 720, 'game');
 const container = document.querySelector('.game-flex-container');
@@ -482,6 +483,7 @@ let backgroundHandler2;
 let collisionHandler = new _collisionHandler.CollisionHandler();
 let enemies = [];
 let explosions = [];
+let particules = [];
 let weaponAround;
 var active = false;
 let player;
@@ -491,6 +493,7 @@ function initPlayer() {
         y: 0,
         speedX: 2,
         speedY: 2,
+        characterName: 'elemental-master',
         reference: 'hero',
         cropX: 0,
         cropY: 0,
@@ -515,12 +518,33 @@ function intWeaponAround() {
         cropHeight: 250
     }, imageHandler, displayHandler, player);
 }
+function initParticule() {
+    const particule = new _particule.Particule({
+        x: player.x,
+        y: player.y,
+        speedX: 2,
+        speedY: 0.1,
+        reference: 'character_ememy_set_3',
+        cropX: 0,
+        cropY: 0,
+        width: 10,
+        height: 10,
+        cropWidth: 32,
+        cropHeight: 32
+    }, imageHandler, displayHandler, player);
+    particule.setCoords({
+        x: player.x + 30,
+        y: player.y + 80
+    });
+    particules.push(particule);
+}
 function initEnemy() {
     const enemy = new _enemy.Enemy({
         x: Math.random() * 960,
         y: 0,
         speedX: 2,
         speedY: 0.1,
+        characterName: 'champignon-bleu',
         reference: 'character_ememy_set_3',
         cropX: 0,
         cropY: 0,
@@ -623,6 +647,10 @@ const gameLoop = ()=>{
         explosion.update();
         explosion.draw();
     });
+    particules.forEach((particule)=>{
+        particule.update();
+        particule.draw();
+    });
     weaponAround.update();
     weaponAround.draw();
     if (delay === 60) {
@@ -645,6 +673,8 @@ imageHandler.loadImages().then(async (data)=>{
     intWeaponAround();
     setInterval(initEnemy, 10000);
     setInterval(initExplosion, 5000);
+    //setInterval(InitParticule, 50);
+    initParticule();
     //const gameBackgroundImage = createMapsheetImageHTMLElement();
     // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
     setTimeout(gameLoop, 2000);
@@ -713,7 +743,7 @@ function getRandomShootSoundUrl() {
     ][Math.floor(Math.random() * 5)];
 }
 
-},{"./models/image-handler":"dNiUY","./models/display-handler":"68nTU","./models/player":"kBw1Q","./models/background-handler":"gCSiG","./models/collision-handler":"jg8rU","./models/enemy":"6Lm0A","./models/explosion":"7cHCu","./models/around":"9tmZH"}],"dNiUY":[function(require,module,exports) {
+},{"./models/image-handler":"dNiUY","./models/display-handler":"68nTU","./models/player":"kBw1Q","./models/background-handler":"gCSiG","./models/collision-handler":"jg8rU","./models/enemy":"6Lm0A","./models/explosion":"7cHCu","./models/around":"9tmZH","./models/particule":"l7mQG"}],"dNiUY":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ImageHandler", ()=>ImageHandler
@@ -868,18 +898,24 @@ class DisplayHandler {
         this.ctx.fillStyle = "green";
         this.ctx.fill();
     }
+    drawCircle(entity1) {
+        this.ctx.fillStyle = '#FFF';
+        this.ctx.beginPath();
+        this.ctx.arc(entity1.x, entity1.y, entity1.width, 0, 2 * Math.PI, true);
+        this.ctx.fill();
+    }
     clearRect() {
         this.ctx.clearRect(0, 0, 960, 720);
     }
-    draw(entity1) {
-        this.ctx.drawImage(entity1.img, entity1.cropX, entity1.cropY, entity1.cropWidth, entity1.cropHeight, entity1.x, entity1.y, entity1.width, entity1.height // The height of the destination image
+    draw(entity2) {
+        this.ctx.drawImage(entity2.img, entity2.cropX, entity2.cropY, entity2.cropWidth, entity2.cropHeight, entity2.x, entity2.y, entity2.width, entity2.height // The height of the destination image
         );
         this.ctx.filter = `saturate(50)%`;
     }
     // Affiche des informations sur le héros
-    drawDatas(entity2) {
+    drawDatas(entity3) {
         this.setFontSize(40);
-        const message = `Life : ${entity2.life}  score : ${entity2.score}`;
+        const message = `Life : ${entity3.life}  score : ${entity3.score}`;
         this.ctx.fillStyle = "#FFFFFF";
         this.ctx.fillText(message, 10, 35);
     /* propriétés possibles pour le contexte */ // direction: "ltr"
@@ -939,80 +975,6 @@ class Player extends _sprite.Sprite {
         this.shootedBullets = [];
         this.life = 10;
         this.score = 0;
-        this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper({
-            rightCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 64
-                },
-                {
-                    cropX: 32,
-                    cropY: 64
-                },
-                {
-                    cropX: 0,
-                    cropY: 64
-                },
-                {
-                    cropX: 64,
-                    cropY: 64
-                }
-            ],
-            leftCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 32
-                },
-                {
-                    cropX: 32,
-                    cropY: 32
-                },
-                {
-                    cropX: 0,
-                    cropY: 32
-                },
-                {
-                    cropX: 64,
-                    cropY: 32
-                }
-            ],
-            upCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 96
-                },
-                {
-                    cropX: 32,
-                    cropY: 96
-                },
-                {
-                    cropX: 0,
-                    cropY: 96
-                },
-                {
-                    cropX: 64,
-                    cropY: 96
-                }
-            ],
-            downCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 0
-                },
-                {
-                    cropX: 32,
-                    cropY: 0
-                },
-                {
-                    cropX: 0,
-                    cropY: 0
-                },
-                {
-                    cropX: 64,
-                    cropY: 0
-                }
-            ]
-        }, 3);
         this.direction = 'north';
         this.shoot = ()=>{
             const shootedBullet = new _bullet.Bullet({
@@ -1034,6 +996,7 @@ class Player extends _sprite.Sprite {
             });
             this.shootedBullets.push(shootedBullet);
         };
+        this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper(attributes.characterName, 3);
     }
     drawShootedBullets() {
         this.shootedBullets.forEach((shootedBullet)=>{
@@ -1138,16 +1101,14 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "SpriteImageCroper", ()=>SpriteImageCroper
 );
-class SpriteImageCroper {
-    // rightCycleLoop = [{cropX:0,cropY:64}, {cropX:32,cropY:64},{cropX:0,cropY:64},{cropX:64,cropY:64}];
-    // leftCycleLoop = [{cropX:0,cropY:32}, {cropX:32,cropY:32},{cropX:0,cropY:32},{cropX:64,cropY:32}];
-    // upCycleLoop = [{cropX:0,cropY:96}, {cropX:32,cropY:96},{cropX:0,cropY:96},{cropX:64,cropY:96}];
-    // downCycleLoop = [{cropX:0,cropY:0}, {cropX:32,cropY:0},{cropX:0,cropY:0},{cropX:64,cropY:0}];
-    constructor(cycle, indexPerCycle){
+var _gameCharacterData = require("./game-character-data");
+class SpriteImageCroper extends _gameCharacterData.GameCharacterData {
+    constructor(characterName, indexPerCycle){
+        super();
         this.indexPerCycle = indexPerCycle;
         this.step = 0;
         this.currentLoopIndex = 0;
-        this.cycle = cycle;
+        this.cycle = this.getCharacterData(characterName).cropCryle;
     }
     getCropCoordinate(direction) {
         this.setCurrentLoopIndex();
@@ -1169,6 +1130,607 @@ class SpriteImageCroper {
             if (this.currentLoopIndex === this.indexPerCycle) this.currentLoopIndex = 0;
             else this.currentLoopIndex++;
         }
+    }
+}
+
+},{"./game-character-data":"lMPwH","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"lMPwH":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "GameCharacterData", ()=>GameCharacterData
+);
+class GameCharacterData {
+    constructor(){
+        this.data = [
+            {
+                characterName: 'elemental-master',
+                type: 'main-character',
+                imageReference: 'hero',
+                cropCryle: {
+                    rightCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 0,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 64
+                        }
+                    ],
+                    leftCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 0,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 32
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 0,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 96
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 0,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 0
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'chauve-souris',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 32
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 64
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 0,
+                            cropY: 96
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 0
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'globule-rouge',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 32
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 64
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 96
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 0
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'abeille-verte',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 32
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 64
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 96
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 0
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'champignon-bleu',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 32
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 32
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 64
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 64
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 96
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 96
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 0
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 0
+                        }
+                    ]
+                }
+            },
+            /////////////////////////////
+            {
+                characterName: 'rat',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 160
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 192
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 224
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 0,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 32,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 64,
+                            cropY: 128
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'globule-rouge',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 160
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 192
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 224
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 92,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 128,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 160,
+                            cropY: 128
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'abeille-verte',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 160
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 192
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 224
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 192,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 224,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 256,
+                            cropY: 128
+                        }
+                    ]
+                }
+            },
+            {
+                characterName: 'champignon-bleu',
+                type: 'enemy',
+                imageReference: 'character_ememy_set_3',
+                cropCryle: {
+                    leftCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 160
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 160
+                        }
+                    ],
+                    rightCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 192
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 192
+                        }
+                    ],
+                    upCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 224
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 224
+                        }
+                    ],
+                    downCycleLoop: [
+                        {
+                            cropX: 288,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 320,
+                            cropY: 128
+                        },
+                        {
+                            cropX: 352,
+                            cropY: 128
+                        }
+                    ]
+                }
+            }, 
+        ];
+    }
+    getCharacterData(characterName) {
+        return this.data.find((character)=>{
+            return character.characterName === characterName;
+        });
     }
 }
 
@@ -1248,64 +1810,6 @@ class Enemy extends _sprite.Sprite {
         this.player = player;
         this.behavior = behavior;
         this.shootedBullets = [];
-        this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper({
-            leftCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 32
-                },
-                {
-                    cropX: 32,
-                    cropY: 32
-                },
-                {
-                    cropX: 64,
-                    cropY: 32
-                }
-            ],
-            rightCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 64
-                },
-                {
-                    cropX: 32,
-                    cropY: 64
-                },
-                {
-                    cropX: 64,
-                    cropY: 64
-                }
-            ],
-            upCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 96
-                },
-                {
-                    cropX: 32,
-                    cropY: 96
-                },
-                {
-                    cropX: 0,
-                    cropY: 96
-                }
-            ],
-            downCycleLoop: [
-                {
-                    cropX: 0,
-                    cropY: 0
-                },
-                {
-                    cropX: 32,
-                    cropY: 0
-                },
-                {
-                    cropX: 64,
-                    cropY: 0
-                }
-            ]
-        }, 2);
         this.direction = 'south';
         this.shoot = ()=>{
             if (Math.random() < 0.99) return;
@@ -1317,6 +1821,7 @@ class Enemy extends _sprite.Sprite {
             this.initBullet(180);
             this.initBullet(250);
         };
+        this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper(attributes.characterName, 2);
     }
     update() {
         //this.setDirection();
@@ -1369,7 +1874,7 @@ class Enemy extends _sprite.Sprite {
     }
 }
 
-},{"./bullet":"9V7mY","./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV","./srpite-image-cropper":"8EDiP"}],"7cHCu":[function(require,module,exports) {
+},{"./bullet":"9V7mY","./sprite":"3Hinm","./srpite-image-cropper":"8EDiP","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"7cHCu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Explosion", ()=>Explosion
@@ -1587,6 +2092,34 @@ class Around extends _sprite.Sprite {
     }
     draw() {
         this.displayHandler.draw(this);
+    }
+}
+
+},{"./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"l7mQG":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Particule", ()=>Particule
+);
+var _sprite = require("./sprite");
+class Particule extends _sprite.Sprite {
+    constructor(attributes, imageHandler, displayHandler, player){
+        super(attributes, imageHandler, displayHandler);
+        this.player = player;
+        this.frame = 0;
+    }
+    draw() {
+        if (this.frame === 4) {
+            this.displayHandler.drawCircle(this);
+            this.frame = 0;
+        } else this.frame++;
+    }
+    update() {
+        if (this.angle < 360) this.angle++;
+        else this.angle = 0;
+        //if (this.angle%2 == 0){
+        this.x = 300 + Math.cos(this.angle) * 80;
+        this.y = 300 + Math.sin(this.angle) * 80;
+    //}
     }
 }
 

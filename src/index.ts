@@ -8,6 +8,7 @@ import { Enemy } from "./models/enemy";
 import { Explosion } from "./models/explosion";
 import { Around } from "./models/around";
 import { Bullet } from "./models/bullet";
+import { Particule } from "./models/particule";
 
 //const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -27,6 +28,7 @@ let backgroundHandler2: BackgroundHandler;
 let collisionHandler = new CollisionHandler();
 let enemies = [];
 let explosions = [];
+let particules = [];
 let weaponAround: Around;
 var active = false;
 let player: Player;
@@ -38,6 +40,7 @@ function initPlayer(): void {
             y: 0,
             speedX: 2,
             speedY: 2,
+            characterName: 'elemental-master',
             reference: 'hero',
             cropX: 0,
             cropY: 0,
@@ -72,6 +75,31 @@ function intWeaponAround(): void {
     );
 }
 
+
+function initParticule(): void {
+    const particule = new Particule (
+        {
+            x: player.x,
+            y: player.y,
+            speedX: 2,
+            speedY: 0.1,
+            reference: 'character_ememy_set_3',
+            cropX: 0,
+            cropY: 0,
+            width: 10,
+            height: 10,
+            cropWidth: 32,
+            cropHeight: 32
+        },
+        imageHandler,
+        displayHandler,
+        player
+    )
+
+    particule.setCoords({x: player.x + 30, y: player.y + 80});
+    particules.push(particule);
+}
+
 function initEnemy(): void {
     const enemy = new Enemy(
         {
@@ -79,6 +107,7 @@ function initEnemy(): void {
             y: 0,
             speedX: 2,
             speedY: 0.1,
+            characterName: 'champignon-bleu',
             reference: 'character_ememy_set_3',
             cropX: 0,
             cropY: 0,
@@ -247,6 +276,7 @@ const gameLoop = (): void => {
     player.drawPlayerDatas();
 
 
+
     enemies.forEach(enemy=> {
         enemy.update();
         enemy.shoot();
@@ -258,6 +288,11 @@ const gameLoop = (): void => {
     explosions.forEach(explosion=> {
         explosion.update();
         explosion.draw();
+    });
+
+    particules.forEach(particule => {
+        particule.update();
+        particule.draw();
     });
 
     weaponAround.update();
@@ -293,6 +328,9 @@ initSprites();
 intWeaponAround();
 setInterval(initEnemy, 10000);
 setInterval(initExplosion, 5000);
+//setInterval(InitParticule, 50);
+
+initParticule();
 
 //const gameBackgroundImage = createMapsheetImageHTMLElement();
 // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
