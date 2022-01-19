@@ -14,6 +14,13 @@ export class DisplayHandler {
       this.ctx.fill();
     }
 
+    drawCircle(entity): void {
+      this.ctx.fillStyle = '#FFF';
+      this.ctx.beginPath();
+      this.ctx.arc(entity.x, entity.y, entity.width, 0, 2 * Math.PI, true);
+      this.ctx.fill();
+    }
+
     clearRect() {
       this.ctx.clearRect(0,0, 960, 720);
     }

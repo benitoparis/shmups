@@ -8,31 +8,7 @@ import { SpriteImageCroper } from "./srpite-image-cropper";
 export class Enemy extends Sprite {
 
     shootedBullets = [];
-    spriteImageCroper = new SpriteImageCroper(
-        {
-            leftCycleLoop: [
-                {cropX:0,cropY:32},
-                {cropX:32,cropY:32},
-                {cropX:64,cropY:32}
-            ],
-             rightCycleLoop: [
-                {cropX:0,cropY:64},
-                {cropX:32,cropY:64},
-                {cropX:64,cropY:64}
-            ],
-            upCycleLoop: [
-                {cropX:0,cropY:96},
-                {cropX:32,cropY:96},
-                {cropX:0,cropY:96}
-            ],
-            downCycleLoop: [
-                {cropX:0,cropY:0},
-                {cropX:32,cropY:0},
-                {cropX:64,cropY:0}
-            ],
-        },
-        2
-    );
+    spriteImageCroper: SpriteImageCroper;
     direction = 'south';
 
     constructor(
@@ -47,6 +23,11 @@ export class Enemy extends Sprite {
             attributes,
             imageHandler,
             displayHandler
+        );
+
+        this.spriteImageCroper = new SpriteImageCroper(
+            attributes.characterName,
+            2
         );
 
         

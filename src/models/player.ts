@@ -9,15 +9,7 @@ export class Player extends Sprite {
     shootedBullets = [];
     life = 10;
     score = 0;
-    spriteImageCroper = new SpriteImageCroper(
-        {
-            rightCycleLoop: [{cropX:0,cropY:64}, {cropX:32,cropY:64},{cropX:0,cropY:64},{cropX:64,cropY:64}],
-            leftCycleLoop: [{cropX:0,cropY:32}, {cropX:32,cropY:32},{cropX:0,cropY:32},{cropX:64,cropY:32}],
-            upCycleLoop: [{cropX:0,cropY:96}, {cropX:32,cropY:96},{cropX:0,cropY:96},{cropX:64,cropY:96}],
-            downCycleLoop: [{cropX:0,cropY:0}, {cropX:32,cropY:0},{cropX:0,cropY:0},{cropX:64,cropY:0}],
-        },
-        3
-    );
+    spriteImageCroper: SpriteImageCroper;
     direction = 'north';
 
     constructor(
@@ -32,6 +24,11 @@ export class Player extends Sprite {
             imageHandler,
             displayHandler
         ) 
+
+        this.spriteImageCroper = new SpriteImageCroper(
+            attributes.characterName,
+            3
+        );
     }
 
 
