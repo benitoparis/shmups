@@ -35,8 +35,8 @@ export class Player extends Sprite {
     shoot = ()=> {
         const shootedBullet = new Bullet(
             {
-            x: this.centerX   ,
-            y: this.y,
+            x: this.centerX,
+            y: this.direction === 'north' ? this.y - 10 : this.y + 50,
             speedX: 0,
             speedY: this.direction === 'north' ? -10 : 10,
             reference: 'Fire_Bullet_Pixel_All_Reverse',
@@ -44,13 +44,13 @@ export class Player extends Sprite {
             cropY: 116,
             cropWidth: 30,
             cropHeight: 30,
-            width: 40,
-            height: 40
+            width: 20,
+            height: 20
             },
             this.imageHandler,
             this.displayHandler 
         );
-        shootedBullet.setCoords({x: this.centerX, y: this.y - 50});
+        shootedBullet.setCoords({x: this.centerX, y: this.direction === 'north' ? this.y - 10 : this.y + 50});
         this.shootedBullets.push(shootedBullet);
     }
 

@@ -19,19 +19,23 @@ container.appendChild(canvas);
 //canvas.width = 960;
 //canvas.height = 720;
 const ctx = canvas.getContext('2d');
-let gameAnimarionFrameRequestId: number;
+
 const displayHandler = new DisplayHandler(ctx);
 const imageHandler = new ImageHandler();
+
+let gameAnimationFrameRequestId: number;
 let backgroundHandler1: BackgroundHandler;
 let backgroundHandler2: BackgroundHandler;
-
 let collisionHandler = new CollisionHandler();
 let enemies = [];
 let explosions = [];
 let particules = [];
+let player: Player;
+
 let weaponAround: Around;
 var active = false;
-let player: Player;
+
+let gameActive = false;
 
 function initPlayer(): void {
     player = new Player(
@@ -185,11 +189,11 @@ function initSprites() {
     initBackground();
 }
 
-const initExplosion = ()=> {
+const initExplosion = (x: number, y:number)=> {
     const explosion = new Explosion(
         {
-            x: (Math.random() * 800),
-            y: (Math.random() * 600),
+            x: x,
+            y: x,
             speedX: 0,
             speedY: 0,
             reference: 'explosion',
@@ -204,7 +208,7 @@ const initExplosion = ()=> {
         displayHandler
     );
 
-    explosion.setCoords({x: (Math.random() * 800), y: (Math.random() * 600)});
+    explosion.setCoords({x: x, y: y});
 
     explosions.push(explosion);
 }
@@ -283,11 +287,19 @@ const gameLoop = (): void => {
         enemy.updateBullets();
         enemy.drawShootedBullets();
         enemy.draw();
+        enemy.drawScore();
     });
 
-    explosions.forEach(explosion=> {
-        explosion.update();
-        explosion.draw();
+    explosions.forEach((explosion, idx) => {
+        if (explosion.toDelete){
+
+            delete explosions[idx];
+
+        } else {
+            explosion.update();
+            explosion.draw();
+        };
+        
     });
 
     particules.forEach(particule => {
@@ -295,10 +307,7 @@ const gameLoop = (): void => {
         particule.draw();
     });
 
-    weaponAround.update();
-    weaponAround.draw();
-
-    if (delay === 60){
+    if (delay === 30){
         checkAllCollisions();
         delay = 0;
         
@@ -309,67 +318,86 @@ const gameLoop = (): void => {
 
     //deleteItemWhenOutOfBounds(enemies);
 
-    gameAnimarionFrameRequestId = window.requestAnimationFrame(gameLoop);
+    if (gameActive){
+        gameAnimationFrameRequestId = window.requestAnimationFrame(gameLoop);
+    } else {
+        gameOver();
+        displayHandler.drawRect({x:0,y:0,width: canvas.width, height: canvas.height});
+        displayHandler.drawText('Game Over', 300, canvas.height / 2, 'white', 70 );
+        setTimeout(initGame, 2000);
+    }
+    
 };
 
-imageHandler.loadImages().then(async (data) => {
 
-displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
-await new Promise((resolve, reject)=> {
 
-    window.addEventListener('keydown', (e: any)=> {
-        displayHandler.clearRect();
-        resolve('ok');
-    })
-});
-displayHandler.drawHomeScreen('Loading','', '');
+function initGame(){
 
-initSprites();
-intWeaponAround();
-setInterval(initEnemy, 10000);
-setInterval(initExplosion, 5000);
-//setInterval(InitParticule, 50);
+    gameActive = true;
 
-initParticule();
+    imageHandler.loadImages().then(async (data) => {
 
-//const gameBackgroundImage = createMapsheetImageHTMLElement();
-// backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
-
-setTimeout(gameLoop, 2000);
-});
+        displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
+        await new Promise((resolve, reject)=> {
+        
+            window.addEventListener('keydown', (e: any)=> {
+                displayHandler.clearRect();
+                resolve('ok');
+            })
+        });
+        displayHandler.drawHomeScreen('Loading','', '');
+        
+        initSprites();
+        setInterval(initEnemy, 10000);
+        initParticule();
+        
+        //const gameBackgroundImage = createMapsheetImageHTMLElement();
+        // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
+        
+        setTimeout(gameLoop, 2000);
+        });
+}
 
 function checkAllCollisions(): void {
     enemies.forEach((enemy: Enemy, idx: number) => {
-        if(collisionHandler.checkCollision(enemy, player)) {
-            //alert('collison between player and enemy');
+        if (collisionHandler.checkCollision(enemy, player)) {
+
+            if (player.life > 0){
+                player.damage();
+            } else {
+                gameActive = false;
+            }
         }
 
-        if (player.shootedBullets.length){
+        if (player.shootedBullets.length) {
             player.shootedBullets.forEach((bullet: Bullet, index: number)=> {
                 if (collisionHandler.checkCollision(enemy, bullet)){
 
                     console.log('enemy.life', enemy.life);
                     console.log('bullet', bullet);
 
-                    if(enemy.life > 0){
+                    if (enemy.life > 0){
                         enemy.damage();
+                        initExplosion(enemy.x, enemy.y);
                     } else {
-
-                        alert('plus de crédit');
                         delete enemies[idx];
                         delete player.shootedBullets[index];
                     }
+                }
+            });
+        }
 
-                    
-
-                    
+        if (enemy.shootedBullets.length){
+            enemy.shootedBullets.forEach((enemyBullet: Bullet, index: number)=> {
+                if (collisionHandler.checkCollision(player, enemyBullet)){
+                    delete enemy.shootedBullets[index];
+                    if (player.life > 0) player.damage();
+                    if (player.life <= 0) gameActive = false;    
                 }
             });
         }
 
     });
-
-
 }
 
 // Fonction qui crée un élément Image HTML en prenant une capture du canvas
@@ -445,6 +473,20 @@ function getRandomShootSoundUrl(): string {
 
     ][Math.floor(Math.random() * 5)];
 }
+
+function gameOver(): void {
+    window.cancelAnimationFrame(gameAnimationFrameRequestId);
+    resetSprites();
+    return;
+}
+
+function resetSprites(): void {
+    enemies = [];
+    explosions = [];
+    particules = [];
+}
+
+initGame();
 
 
 

@@ -58,13 +58,11 @@ export class Sprite {
         this.cropY = attributes.cropY;
         this.cropWidth = attributes.cropWidth;
         this.cropHeight = attributes.cropHeight;
-        
     }
 
     setDimensions(attributes: any): void {
         this.width = attributes.width;
         this.height = attributes.height;
-        
     }
 
     draw(): void {
@@ -74,6 +72,10 @@ export class Sprite {
     damage = ()=> {
         if(this.life === 0) return;
         this.life--;
+    }
+
+    drawScore(): void {
+        this.displayHandler.drawFloatingMessage(this);
     }
 
 

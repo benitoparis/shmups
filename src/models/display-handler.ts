@@ -10,7 +10,7 @@ export class DisplayHandler {
 
     drawRect(entity): void {
       this.ctx.rect(entity.x, entity.y, entity.width, entity.height);
-      this.ctx.fillStyle = "green";
+      this.ctx.fillStyle = "black";
       this.ctx.fill();
     }
 
@@ -47,11 +47,11 @@ export class DisplayHandler {
       // Affiche des informations sur le héros
       drawDatas(entity: any) {
 
-        this.setFontSize(40);
+        this.setFontSize(20);
 
         const message = `Life : ${entity.life}  score : ${entity.score}`;
         this.ctx.fillStyle = "#FFFFFF";
-        this.ctx.fillText(message, 10, 35);
+        this.ctx.fillText(message, entity.x, entity.y);
 
 
         /* propriétés possibles pour le contexte */
@@ -103,5 +103,9 @@ export class DisplayHandler {
         this.setFontSize(textSize);
         this.ctx.fillStyle = fontColor;
         this.ctx.fillText(txt, x, y);
+      }
+
+      drawFloatingMessage(entity:any): void{
+        this.drawDatas(entity);
       }
 }

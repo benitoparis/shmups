@@ -27,7 +27,9 @@ export class Explosion extends Sprite {
         {cropX: 800, cropY: 600},
     ];
     cropIndex = 0;
+    toDelete = false;
     
+
     constructor(
         attributes: any,
         imageHandler: ImageHandler,
@@ -43,17 +45,21 @@ export class Explosion extends Sprite {
 
     update() {
 
-        if (this.imagesCrops[this.cropIndex]){
+        if (this.imagesCrops[this.cropIndex]) {
             this.cropX = this.imagesCrops[this.cropIndex].cropX;
             this.cropY = this.imagesCrops[this.cropIndex].cropY;
-            this.cropIndex++;
 
+            if (Math.random() > 0.5) this.cropIndex++;
             return;
         } 
 
-        this.cropIndex = 0;
-        this.cropX = this.imagesCrops[this.cropIndex].cropX;
-        this.cropY = this.imagesCrops[this.cropIndex].cropY;
+        this.toDelete = true;
+
+
+
+        // this.cropIndex = 0;
+        // this.cropX = this.imagesCrops[this.cropIndex].cropX;
+        // this.cropY = this.imagesCrops[this.cropIndex].cropY;
 
 
     }

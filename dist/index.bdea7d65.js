@@ -475,18 +475,19 @@ container.appendChild(canvas1);
 //canvas.width = 960;
 //canvas.height = 720;
 const ctx1 = canvas1.getContext('2d');
-let gameAnimarionFrameRequestId;
 const displayHandler = new _displayHandler.DisplayHandler(ctx1);
 const imageHandler = new _imageHandler.ImageHandler();
+let gameAnimationFrameRequestId;
 let backgroundHandler1;
 let backgroundHandler2;
 let collisionHandler = new _collisionHandler.CollisionHandler();
 let enemies = [];
 let explosions = [];
 let particules = [];
+let player;
 let weaponAround;
 var active = false;
-let player;
+let gameActive = false;
 function initPlayer() {
     player = new _player.Player({
         x: 0,
@@ -570,10 +571,10 @@ function initSprites() {
     initEnemy();
     initBackground();
 }
-const initExplosion = ()=>{
+const initExplosion = (x, y)=>{
     const explosion = new _explosion.Explosion({
-        x: Math.random() * 800,
-        y: Math.random() * 600,
+        x: x,
+        y: x,
         speedX: 0,
         speedY: 0,
         reference: 'explosion',
@@ -585,8 +586,8 @@ const initExplosion = ()=>{
         cropHeight: 100
     }, imageHandler, displayHandler);
     explosion.setCoords({
-        x: Math.random() * 800,
-        y: Math.random() * 600
+        x: x,
+        y: y
     });
     explosions.push(explosion);
 };
@@ -642,56 +643,80 @@ const gameLoop = ()=>{
         enemy.updateBullets();
         enemy.drawShootedBullets();
         enemy.draw();
+        enemy.drawScore();
     });
-    explosions.forEach((explosion)=>{
-        explosion.update();
-        explosion.draw();
+    explosions.forEach((explosion, idx)=>{
+        if (explosion.toDelete) delete explosions[idx];
+        else {
+            explosion.update();
+            explosion.draw();
+        }
     });
     particules.forEach((particule)=>{
         particule.update();
         particule.draw();
     });
-    weaponAround.update();
-    weaponAround.draw();
-    if (delay === 60) {
+    if (delay === 30) {
         checkAllCollisions();
         delay = 0;
     } else delay++;
     //deleteItemWhenOutOfBounds(enemies);
-    gameAnimarionFrameRequestId = window.requestAnimationFrame(gameLoop);
-};
-imageHandler.loadImages().then(async (data)=>{
-    displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
-    await new Promise((resolve, reject)=>{
-        window.addEventListener('keydown', (e)=>{
-            displayHandler.clearRect();
-            resolve('ok');
+    if (gameActive) gameAnimationFrameRequestId = window.requestAnimationFrame(gameLoop);
+    else {
+        gameOver();
+        displayHandler.drawRect({
+            x: 0,
+            y: 0,
+            width: canvas1.width,
+            height: canvas1.height
         });
+        displayHandler.drawText('Game Over', 300, canvas1.height / 2, 'white', 70);
+        setTimeout(initGame, 2000);
+    }
+};
+function initGame() {
+    gameActive = true;
+    imageHandler.loadImages().then(async (data)=>{
+        displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
+        await new Promise((resolve, reject)=>{
+            window.addEventListener('keydown', (e)=>{
+                displayHandler.clearRect();
+                resolve('ok');
+            });
+        });
+        displayHandler.drawHomeScreen('Loading', '', '');
+        initSprites();
+        setInterval(initEnemy, 10000);
+        initParticule();
+        //const gameBackgroundImage = createMapsheetImageHTMLElement();
+        // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
+        setTimeout(gameLoop, 2000);
     });
-    displayHandler.drawHomeScreen('Loading', '', '');
-    initSprites();
-    intWeaponAround();
-    setInterval(initEnemy, 10000);
-    setInterval(initExplosion, 5000);
-    //setInterval(InitParticule, 50);
-    initParticule();
-    //const gameBackgroundImage = createMapsheetImageHTMLElement();
-    // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
-    setTimeout(gameLoop, 2000);
-});
+}
 function checkAllCollisions() {
     enemies.forEach((enemy, idx)=>{
-        collisionHandler.checkCollision(enemy, player);
+        if (collisionHandler.checkCollision(enemy, player)) {
+            if (player.life > 0) player.damage();
+            else gameActive = false;
+        }
         if (player.shootedBullets.length) player.shootedBullets.forEach((bullet, index)=>{
             if (collisionHandler.checkCollision(enemy, bullet)) {
                 console.log('enemy.life', enemy.life);
                 console.log('bullet', bullet);
-                if (enemy.life > 0) enemy.damage();
-                else {
-                    alert('plus de crédit');
+                if (enemy.life > 0) {
+                    enemy.damage();
+                    initExplosion(enemy.x, enemy.y);
+                } else {
                     delete enemies[idx];
                     delete player.shootedBullets[index];
                 }
+            }
+        });
+        if (enemy.shootedBullets.length) enemy.shootedBullets.forEach((enemyBullet, index)=>{
+            if (collisionHandler.checkCollision(player, enemyBullet)) {
+                delete enemy.shootedBullets[index];
+                if (player.life > 0) player.damage();
+                if (player.life <= 0) gameActive = false;
             }
         });
     });
@@ -742,6 +767,17 @@ function getRandomShootSoundUrl() {
         'http://benoit-dev-demo.com/audio/mixkit-space-deploy-whizz-3003.wav'
     ][Math.floor(Math.random() * 5)];
 }
+function gameOver() {
+    window.cancelAnimationFrame(gameAnimationFrameRequestId);
+    resetSprites();
+    return;
+}
+function resetSprites() {
+    enemies = [];
+    explosions = [];
+    particules = [];
+}
+initGame();
 
 },{"./models/image-handler":"dNiUY","./models/display-handler":"68nTU","./models/player":"kBw1Q","./models/background-handler":"gCSiG","./models/collision-handler":"jg8rU","./models/enemy":"6Lm0A","./models/explosion":"7cHCu","./models/around":"9tmZH","./models/particule":"l7mQG"}],"dNiUY":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -895,7 +931,7 @@ class DisplayHandler {
     }
     drawRect(entity) {
         this.ctx.rect(entity.x, entity.y, entity.width, entity.height);
-        this.ctx.fillStyle = "green";
+        this.ctx.fillStyle = "black";
         this.ctx.fill();
     }
     drawCircle(entity1) {
@@ -914,10 +950,10 @@ class DisplayHandler {
     }
     // Affiche des informations sur le héros
     drawDatas(entity3) {
-        this.setFontSize(40);
+        this.setFontSize(20);
         const message = `Life : ${entity3.life}  score : ${entity3.score}`;
         this.ctx.fillStyle = "#FFFFFF";
-        this.ctx.fillText(message, 10, 35);
+        this.ctx.fillText(message, entity3.x, entity3.y);
     /* propriétés possibles pour le contexte */ // direction: "ltr"
     // fillStyle: "#ffffff"
     // filter: "none"
@@ -958,6 +994,9 @@ class DisplayHandler {
         this.ctx.fillStyle = fontColor;
         this.ctx.fillText(txt, x, y);
     }
+    drawFloatingMessage(entity4) {
+        this.drawDatas(entity4);
+    }
 }
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"kBw1Q":[function(require,module,exports) {
@@ -979,7 +1018,7 @@ class Player extends _sprite.Sprite {
         this.shoot = ()=>{
             const shootedBullet = new _bullet.Bullet({
                 x: this.centerX,
-                y: this.y,
+                y: this.direction === 'north' ? this.y - 10 : this.y + 50,
                 speedX: 0,
                 speedY: this.direction === 'north' ? -10 : 10,
                 reference: 'Fire_Bullet_Pixel_All_Reverse',
@@ -987,12 +1026,12 @@ class Player extends _sprite.Sprite {
                 cropY: 116,
                 cropWidth: 30,
                 cropHeight: 30,
-                width: 40,
-                height: 40
+                width: 20,
+                height: 20
             }, this.imageHandler, this.displayHandler);
             shootedBullet.setCoords({
                 x: this.centerX,
-                y: this.y - 50
+                y: this.direction === 'north' ? this.y - 10 : this.y + 50
             });
             this.shootedBullets.push(shootedBullet);
         };
@@ -1093,6 +1132,9 @@ class Sprite {
     }
     draw() {
         this.displayHandler.draw(this);
+    }
+    drawScore() {
+        this.displayHandler.drawFloatingMessage(this);
     }
 }
 
@@ -1849,17 +1891,17 @@ class Enemy extends _sprite.Sprite {
             y: this.y,
             speedX: Math.sin(angle),
             speedY: 1,
-            reference: 'shootemup-spritesheet',
-            cropX: 250,
-            cropY: 2500,
-            cropWidth: 250,
-            cropHeight: 250,
-            width: 200,
-            height: 200
+            reference: 'Fire_Bullet_Pixel_All_Reverse',
+            cropX: 164,
+            cropY: 114,
+            cropWidth: 30,
+            cropHeight: 30,
+            width: 20,
+            height: 20
         }, this.imageHandler, this.displayHandler);
         shootedBullet.setCoords({
-            x: this.x,
-            y: this.y
+            x: this.centerX,
+            y: this.centerY + 30
         });
         this.shootedBullets.push(shootedBullet);
     }
@@ -1966,17 +2008,19 @@ class Explosion extends _sprite.Sprite {
             }, 
         ];
         this.cropIndex = 0;
+        this.toDelete = false;
     }
     update() {
         if (this.imagesCrops[this.cropIndex]) {
             this.cropX = this.imagesCrops[this.cropIndex].cropX;
             this.cropY = this.imagesCrops[this.cropIndex].cropY;
-            this.cropIndex++;
+            if (Math.random() > 0.5) this.cropIndex++;
             return;
         }
-        this.cropIndex = 0;
-        this.cropX = this.imagesCrops[this.cropIndex].cropX;
-        this.cropY = this.imagesCrops[this.cropIndex].cropY;
+        this.toDelete = true;
+    // this.cropIndex = 0;
+    // this.cropX = this.imagesCrops[this.cropIndex].cropX;
+    // this.cropY = this.imagesCrops[this.cropIndex].cropY;
     }
     draw() {
         this.displayHandler.draw(this);

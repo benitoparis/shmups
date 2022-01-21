@@ -84,18 +84,18 @@ export class Enemy extends Sprite {
             y: this.y,
             speedX: Math.sin(angle),
             speedY: 1,
-            reference: 'shootemup-spritesheet',
-            cropX: 250,
-            cropY: 2500,
-            cropWidth: 250,
-            cropHeight: 250,
-            width: 200,
-            height: 200
+            reference: 'Fire_Bullet_Pixel_All_Reverse',
+            cropX: 164,
+            cropY: 114,
+            cropWidth: 30,
+            cropHeight: 30,
+            width: 20,
+            height: 20
         }, 
         this.imageHandler,
         this.displayHandler
         );
-        shootedBullet.setCoords({x: this.x, y: this.y});
+        shootedBullet.setCoords({x: this.centerX, y: this.centerY + 30});
         this.shootedBullets.push(shootedBullet);
     }
 
