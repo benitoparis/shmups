@@ -674,7 +674,8 @@ const gameLoop = ()=>{
         setTimeout(initGame, 2000);
     }
 };
-function initGame() {
+async function initGame() {
+    await startScreenAnimation();
     gameActive = true;
     imageHandler.loadImages().then(async (data)=>{
         displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
@@ -691,6 +692,31 @@ function initGame() {
         //const gameBackgroundImage = createMapsheetImageHTMLElement();
         // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
         setTimeout(gameLoop, 2000);
+    });
+}
+async function startScreenAnimation() {
+    await new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            displayHandler.drawHomeScreen('jeu', 'Clic Enter', 'copyright');
+            resolve('ok');
+        }, 1000);
+    });
+    await new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            displayHandler.drawHomeScreen('lop', 'Clic start', 'copyright');
+            resolve('ok');
+        }, 1000);
+    });
+    await new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            displayHandler.drawHomeScreen('Allez', 'Ensuite', 'année');
+            resolve('ok');
+        }, 1000);
+    });
+    return new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            resolve('ok');
+        }, 1000);
     });
 }
 function checkAllCollisions() {
@@ -1854,18 +1880,28 @@ class Enemy extends _sprite.Sprite {
         this.shootedBullets = [];
         this.direction = 'south';
         this.shoot = ()=>{
-            if (Math.random() < 0.99) return;
+            if (Math.random() < 0.9999) return;
             // const ratio = (this.y - this.player.y) / (this.x - this.player.x);
             // const speedX = 1;
             // const speedY = speedX * ratio;
-            this.initBullet(0);
-            this.initBullet(45);
-            this.initBullet(180);
-            this.initBullet(250);
+            for(let i = 0; i < 360; i += 20){
+                const bulletSpeed = 0.5;
+                const positionX = this.x + Math.cos(i) * 50;
+                const positionY = this.y + Math.sin(i) * 50;
+                const deltaX = positionX - this.x;
+                const deltaY = positionY - this.y;
+                const magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const velocityScale = bulletSpeed / magnitude;
+                const speedX = deltaX * velocityScale;
+                const speedY = deltaY * velocityScale;
+                this.initBullet(positionX, positionY, speedX, speedY);
+            }
+        //this.setSpeed({speedX: this.speedX === 1 ? -1: 1});
         };
         this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper(attributes.characterName, 2);
     }
     update() {
+        this.setCenter();
         //this.setDirection();
         this.setCropCoordinates();
         this.angle++;
@@ -1885,12 +1921,12 @@ class Enemy extends _sprite.Sprite {
             shootedBullet.update();
         });
     }
-    initBullet(angle) {
+    initBullet(x, y, speedX, speedY) {
         const shootedBullet = new _bullet.Bullet({
-            x: this.x,
-            y: this.y,
-            speedX: Math.sin(angle),
-            speedY: 1,
+            x: x,
+            y: y,
+            speedX: speedX,
+            speedY: speedY,
             reference: 'Fire_Bullet_Pixel_All_Reverse',
             cropX: 164,
             cropY: 114,
@@ -1900,8 +1936,8 @@ class Enemy extends _sprite.Sprite {
             height: 20
         }, this.imageHandler, this.displayHandler);
         shootedBullet.setCoords({
-            x: this.centerX,
-            y: this.centerY + 30
+            x: x,
+            y: y
         });
         this.shootedBullets.push(shootedBullet);
     }

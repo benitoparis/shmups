@@ -79,7 +79,6 @@ function intWeaponAround(): void {
     );
 }
 
-
 function initParticule(): void {
     const particule = new Particule (
         {
@@ -331,7 +330,9 @@ const gameLoop = (): void => {
 
 
 
-function initGame(){
+async function initGame(){
+
+    await startScreenAnimation();
 
     gameActive = true;
 
@@ -355,7 +356,38 @@ function initGame(){
         // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
         
         setTimeout(gameLoop, 2000);
-        });
+    });
+}
+
+async function startScreenAnimation(): Promise<any> {
+
+    await new Promise((resolve, reject)=> {
+        setTimeout(() => {
+            displayHandler.drawHomeScreen('jeu', 'Clic Enter', 'copyright');
+            resolve('ok');
+        }, 1000);
+    });
+
+    await new Promise((resolve, reject)=> {
+        setTimeout(() => {
+            displayHandler.drawHomeScreen('lop', 'Clic start', 'copyright');
+            resolve('ok');
+        }, 1000);
+    });
+
+    await new Promise((resolve, reject)=>{
+        setTimeout(() => {
+            displayHandler.drawHomeScreen('Allez', 'Ensuite', 'année');
+            resolve('ok');
+        }, 1000);
+    })
+
+    return new Promise((resolve, reject)=> {
+        setTimeout(() => {
+       
+            resolve('ok');
+        }, 1000);
+    });
 }
 
 function checkAllCollisions(): void {

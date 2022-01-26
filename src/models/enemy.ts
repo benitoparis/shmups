@@ -35,6 +35,7 @@ export class Enemy extends Sprite {
 
     update(){
 
+        this.setCenter();
         //this.setDirection();
         this.setCropCoordinates();
         this.angle++;
@@ -52,17 +53,32 @@ export class Enemy extends Sprite {
 
     shoot = ()=> {
 
-        if (Math.random() < 0.99) return;
+        if (Math.random() < 0.9999) return;
 
         // const ratio = (this.y - this.player.y) / (this.x - this.player.x);
         // const speedX = 1;
         // const speedY = speedX * ratio;
 
-        this.initBullet(0);
-        this.initBullet(45);
-        this.initBullet(180);
-        this.initBullet(250);
+        for (let i = 0; i < 360; i +=20){
 
+            const bulletSpeed = 0.5;
+            const positionX = this.x + Math.cos(i) * 50;
+            const positionY = this.y + Math.sin(i) * 50;
+            
+
+            const deltaX = positionX - this.x;
+            const deltaY = positionY - this.y;
+
+            const magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const velocityScale = bulletSpeed / magnitude;
+            const speedX = deltaX * velocityScale;
+            const speedY = deltaY * velocityScale;
+
+            
+            this.initBullet(positionX, positionY, speedX, speedY);
+        }
+
+        //this.setSpeed({speedX: this.speedX === 1 ? -1: 1});
     }
 
     drawShootedBullets(): void {
@@ -77,13 +93,13 @@ export class Enemy extends Sprite {
         });
     }
 
-    initBullet(angle: number){
+    initBullet(x: number, y: number, speedX: number, speedY: number): void {
 
         const shootedBullet = new Bullet({
-            x: this.x,
-            y: this.y,
-            speedX: Math.sin(angle),
-            speedY: 1,
+            x: x,
+            y: y,
+            speedX: speedX,
+            speedY: speedY,
             reference: 'Fire_Bullet_Pixel_All_Reverse',
             cropX: 164,
             cropY: 114,
@@ -95,7 +111,7 @@ export class Enemy extends Sprite {
         this.imageHandler,
         this.displayHandler
         );
-        shootedBullet.setCoords({x: this.centerX, y: this.centerY + 30});
+        shootedBullet.setCoords({x: x, y: y});
         this.shootedBullets.push(shootedBullet);
     }
 
@@ -112,6 +128,8 @@ export class Enemy extends Sprite {
         if (this.speedY > 0) this.direction = 'north';
         
     }
+
+
 
 
 }

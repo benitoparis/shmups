@@ -33,7 +33,7 @@ export class Particule extends Sprite {
 
     update(): void {
 
-        if(this.angle < 360){
+        if (this.angle < 360){
             this.angle++;
         } else {
             this.angle = 0;
