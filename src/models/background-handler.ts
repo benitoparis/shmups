@@ -33,8 +33,8 @@ export class BackgroundHandler {
     }
 
     update(){
-        if(this.cropY < 200) {
-            this.cropY = 6000;
+        if(this.cropY < 50) {
+            this.speed = 0;
             return;
         }
         

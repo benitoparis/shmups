@@ -6,9 +6,10 @@ import { BackgroundHandler } from "./models/background-handler";
 import { CollisionHandler } from "./models/collision-handler";
 import { Enemy } from "./models/enemy";
 import { Explosion } from "./models/explosion";
-import { Around } from "./models/around";
+import { Item } from "./models/item";
 import { Bullet } from "./models/bullet";
 import { Particule } from "./models/particule";
+import { GameCharacterData } from "./models/game-character-data";
 
 //const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -31,11 +32,16 @@ let enemies = [];
 let explosions = [];
 let particules = [];
 let player: Player;
+let enemyDatas = new GameCharacterData().data
+    .filter(character=> {
+        return character.type === 'enemy';
+    });
 
-let weaponAround: Around;
+let items = [];
 var active = false;
 
 let gameActive = false;
+
 
 function initPlayer(): void {
     player = new Player(
@@ -58,26 +64,31 @@ function initPlayer(): void {
     );
 }
 
-function intWeaponAround(): void {
-    weaponAround = new Around(
+function initItem(): void {
+    const item = new Item(
         {
-            x: 0,
+            x: (Math.floor(Math.random() * 960)),
             y: 0,
-            speedX: 2,
-            speedY: 2,
-            reference: 'shootemup-spritesheet',
-            cropX: 0,
-            cropY: 0,
-            width: 200,
-            height: 200,
-            cropWidth: 250,
-            cropHeight: 250
+            speedX: 0,
+            speedY: 0.3,
+            characterName: '',
+            reference: 'spritesheet_items_48x48',
+            cropX: 240,
+            cropY: 384,
+            width: 32,
+            height: 32,
+            cropWidth: 48,
+            cropHeight: 48
         },
         imageHandler,
-        displayHandler,
-        player
+        displayHandler
     );
+
+    item.setCoords({x: (Math.floor(Math.random() * 960)), y: 0});
+    items.push(item);
 }
+
+
 
 function initParticule(): void {
     const particule = new Particule (
@@ -104,13 +115,19 @@ function initParticule(): void {
 }
 
 function initEnemy(): void {
+
+    // Récupère les données d'un enemi à créer
+    const enemyData = enemyDatas[
+        Math.floor(Math.random() * enemyDatas.length - 1)
+    ];
+
     const enemy = new Enemy(
         {
-            x: (Math.random() * 960),
+            x: (Math.floor(Math.random() * 960)),
             y: 0,
             speedX: 2,
             speedY: 0.1,
-            characterName: 'champignon-bleu',
+            characterName: enemyData.characterName,
             reference: 'character_ememy_set_3',
             cropX: 0,
             cropY: 0,
@@ -122,33 +139,33 @@ function initEnemy(): void {
         imageHandler,
         displayHandler,
         player,
-        function behavior() { // go down quick when the player is below
-            if (this.player.centerX > this.x &&  this.player.centerX < this.x + this.width) {
-                this.y += 1;
-            }
-        }
-
-        // function behavior() {  // from left to right and slow bottom
-
-            
-        //     this.y += 0.2;
-
-        //     if (this.x > 800) {
-        //         this.speedX = -1;
+        // function behavior() { // go down quick when the player is below
+        //     if (this.player.centerX > this.x &&  this.player.centerX < this.x + this.width) {
+        //         this.y += 1;
         //     }
-
-        //     if (this.x < 50){
-        //         this.speedX = 1;
-        //     }
-
-        //     this.x += this.speedX;
-
-           
         // }
 
-        // ZigZag from left to right
+        function behavior() {  // from left to right and slow bottom
+
+            
+            this.y += 0.2;
+
+            if (this.x > 800) {
+                this.speedX = -1;
+            }
+
+            if (this.x < 50){
+                this.speedX = 1;
+            }
+
+            this.x += this.speedX;
+
+           
+        }
+
+        //ZigZag from left to right
         // function behavior() {
-        //     if (Math.random() > 0.2) return;
+        //     if (Math.random() > 0.3) return;
 
         //     this.x = 300 + (Math.sin(this.angle) * 100);
         //     this.y +=10 ;
@@ -196,8 +213,8 @@ const initExplosion = (x: number, y:number)=> {
             speedX: 0,
             speedY: 0,
             reference: 'explosion',
-            width: 15,
-            height: 15,
+            width: 40,
+            height: 40,
             cropX: 0,
             cropY: 0,
             cropWidth: 100,
@@ -232,13 +249,13 @@ window.addEventListener('keydown', (e: any)=> {
     console.log('e.keyCode', e.keyCode);
     
     if (e.keyCode === 13) { // Entrée
-        //  initSound('http://benoit-dev-demo.com/audio/morceau_piano_jeu.wav');
+        initSound('http://benoit-dev-demo.com/audio/Elemental_master_stage1_8bit.mp3', 0.2);
         active = true;
         alert('active');
     }
     if (e.keyCode === 32) { // Space
         player.shoot(); 
-        initSound(getRandomShootSoundUrl());
+        initSound('http://benoit-dev-demo.com/audio/mixkit-short-laser-gun-shot-1670.wav', 0.1);
     }
 
     if (e.keyCode === 82) { // touche R
@@ -306,6 +323,11 @@ const gameLoop = (): void => {
         particule.draw();
     });
 
+    items.forEach(item=> {
+        item.update();
+        item.draw();
+    })
+
     if (delay === 30){
         checkAllCollisions();
         delay = 0;
@@ -338,7 +360,26 @@ async function initGame(){
 
     imageHandler.loadImages().then(async (data) => {
 
-        displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
+        displayHandler.drawHomeScreen(
+            'Elemental Remaster',
+            '[Press Enter]',
+            'Version 2022');
+
+        const homePageImage = imageHandler.getImage('elemental-illustration');
+        displayHandler.draw(
+            {
+                img: homePageImage, // The image to be cropped
+                cropX: 0, //The x-coordinate of the source image
+                cropY: 0, // The y-coordinate of the source image.
+                cropWidth: 500, // The width of the source image
+                cropHeight: 500, // The height of the source image.
+                x: 50, // The x-coordinate of the destination image.
+                y: 200, // The y-coordinate of the destination image.
+                width: 400, // The width of the destination image.
+                height: 400 // The height of the destination image
+            }
+        );
+
         await new Promise((resolve, reject)=> {
         
             window.addEventListener('keydown', (e: any)=> {
@@ -346,10 +387,11 @@ async function initGame(){
                 resolve('ok');
             })
         });
-        displayHandler.drawHomeScreen('Loading','', '');
+        displayHandler.drawHomeScreen('Loading...','', '');
         
         initSprites();
         setInterval(initEnemy, 10000);
+        setInterval(initItem, 5000);
         initParticule();
         
         //const gameBackgroundImage = createMapsheetImageHTMLElement();
@@ -361,26 +403,34 @@ async function initGame(){
 
 async function startScreenAnimation(): Promise<any> {
 
-    await new Promise((resolve, reject)=> {
-        setTimeout(() => {
-            displayHandler.drawHomeScreen('jeu', 'Clic Enter', 'copyright');
-            resolve('ok');
-        }, 1000);
-    });
+    displayHandler.drawHomeScreen(
+        'Elemental',
+        '',
+        '2022 copyright');
+
+    
 
     await new Promise((resolve, reject)=> {
         setTimeout(() => {
-            displayHandler.drawHomeScreen('lop', 'Clic start', 'copyright');
+            displayHandler.drawHomeScreen(
+                'Elemental Remaster',
+                '',
+                '2022 copyright');
+
             resolve('ok');
-        }, 1000);
+        }, 3000);
     });
 
-    await new Promise((resolve, reject)=>{
+    await new Promise((resolve, reject)=> {
+
         setTimeout(() => {
-            displayHandler.drawHomeScreen('Allez', 'Ensuite', 'année');
+            displayHandler.drawHomeScreen(
+                'Elemental Remaster',
+                'Press Enter',
+                '2022 copyright');
             resolve('ok');
-        }, 1000);
-    })
+        }, 4000);
+    });
 
     return new Promise((resolve, reject)=> {
         setTimeout(() => {
@@ -410,10 +460,11 @@ function checkAllCollisions(): void {
 
                     if (enemy.life > 0){
                         enemy.damage();
-                        initExplosion(enemy.x, enemy.y);
+                  
                     } else {
                         delete enemies[idx];
                         delete player.shootedBullets[index];
+                        initExplosion(enemy.x, enemy.y);
                     }
                 }
             });
@@ -483,11 +534,13 @@ function createCanvasElement(width: number, height: number, idName: string): HTM
     return canvas;
 }
 
-function initSound(url: string): void {
+
+function initSound(url: string, volume: number): void {
   //const audio = document.getElementById('myPlayer');
   const audio = new Audio();
   audio.src = url;
   audio.autoplay = true;
+  audio.volume = volume;
   audio.onended = function(){
     audio.remove(); //on arrete le son à la fin de la piste
   };

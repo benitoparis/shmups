@@ -49,7 +49,7 @@ export class Explosion extends Sprite {
             this.cropX = this.imagesCrops[this.cropIndex].cropX;
             this.cropY = this.imagesCrops[this.cropIndex].cropY;
 
-            if (Math.random() > 0.5) this.cropIndex++;
+            if (Math.random() > 0.2) this.cropIndex++;
             return;
         } 
 

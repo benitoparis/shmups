@@ -1,5 +1,5 @@
 body {
-    background-color: #fff;
+    background-color: #000;
 }
 
 .game-flex-container {
@@ -10,7 +10,8 @@ body {
 }
 
 #game {
-    background-color: #fff;
-    border: 2px solid red;
+    background-color: #000;
+    border: 5px solid red;
+    border-radius: 15px;
 }
 /*# sourceMappingURL=index.9833032a.css.map */

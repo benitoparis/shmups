@@ -19,6 +19,8 @@ export class Sprite {
     cropHeight = 720;
     life = 5;
     angle = 0;
+    activeBlink = false;
+    frame = 0;
 
 
     constructor(
@@ -66,12 +68,26 @@ export class Sprite {
     }
 
     draw(): void {
-        this.displayHandler.draw(this);
+
+        this.frame++;
+        if (this.frame > 20){
+            this.frame = 0;
+            this.activeBlink = false;
+        }
+
+        if (this.activeBlink){
+
+            if(this.frame % 2 === 0) this.displayHandler.draw(this);
+
+        } else {
+            this.displayHandler.draw(this);
+        }   
     }
 
     damage = ()=> {
         if(this.life === 0) return;
         this.life--;
+        this.activeBlink = true;
     }
 
     drawScore(): void {

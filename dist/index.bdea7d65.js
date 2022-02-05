@@ -466,8 +466,9 @@ var _backgroundHandler = require("./models/background-handler");
 var _collisionHandler = require("./models/collision-handler");
 var _enemy = require("./models/enemy");
 var _explosion = require("./models/explosion");
-var _around = require("./models/around");
+var _item = require("./models/item");
 var _particule = require("./models/particule");
+var _gameCharacterData = require("./models/game-character-data");
 //const canvas = document.getElementById('game') as HTMLCanvasElement;
 const canvas1 = createCanvasElement(960, 720, 'game');
 const container = document.querySelector('.game-flex-container');
@@ -485,7 +486,10 @@ let enemies = [];
 let explosions = [];
 let particules = [];
 let player;
-let weaponAround;
+let enemyDatas = new _gameCharacterData.GameCharacterData().data.filter((character)=>{
+    return character.type === 'enemy';
+});
+let items1 = [];
 var active = false;
 let gameActive = false;
 function initPlayer() {
@@ -504,20 +508,26 @@ function initPlayer() {
         cropHeight: 32
     }, imageHandler, displayHandler);
 }
-function intWeaponAround() {
-    weaponAround = new _around.Around({
-        x: 0,
+function initItem() {
+    const item = new _item.Item({
+        x: Math.floor(Math.random() * 960),
         y: 0,
-        speedX: 2,
-        speedY: 2,
-        reference: 'shootemup-spritesheet',
-        cropX: 0,
-        cropY: 0,
-        width: 200,
-        height: 200,
-        cropWidth: 250,
-        cropHeight: 250
-    }, imageHandler, displayHandler, player);
+        speedX: 0,
+        speedY: 0.3,
+        characterName: '',
+        reference: 'spritesheet_items_48x48',
+        cropX: 240,
+        cropY: 384,
+        width: 32,
+        height: 32,
+        cropWidth: 48,
+        cropHeight: 48
+    }, imageHandler, displayHandler);
+    item.setCoords({
+        x: Math.floor(Math.random() * 960),
+        y: 0
+    });
+    items1.push(item);
 }
 function initParticule() {
     const particule = new _particule.Particule({
@@ -540,12 +550,14 @@ function initParticule() {
     particules.push(particule);
 }
 function initEnemy() {
+    // Récupère les données d'un enemi à créer
+    const enemyData = enemyDatas[Math.floor(Math.random() * enemyDatas.length - 1)];
     const enemy = new _enemy.Enemy({
-        x: Math.random() * 960,
+        x: Math.floor(Math.random() * 960),
         y: 0,
         speedX: 2,
         speedY: 0.1,
-        characterName: 'champignon-bleu',
+        characterName: enemyData.characterName,
         reference: 'character_ememy_set_3',
         cropX: 0,
         cropY: 0,
@@ -553,8 +565,16 @@ function initEnemy() {
         height: 100,
         cropWidth: 32,
         cropHeight: 32
-    }, imageHandler, displayHandler, player, function behavior() {
-        if (this.player.centerX > this.x && this.player.centerX < this.x + this.width) this.y += 1;
+    }, imageHandler, displayHandler, player, // function behavior() { // go down quick when the player is below
+    //     if (this.player.centerX > this.x &&  this.player.centerX < this.x + this.width) {
+    //         this.y += 1;
+    //     }
+    // }
+    function behavior() {
+        this.y += 0.2;
+        if (this.x > 800) this.speedX = -1;
+        if (this.x < 50) this.speedX = 1;
+        this.x += this.speedX;
     });
     enemy.setCoords({
         x: 400,
@@ -578,8 +598,8 @@ const initExplosion = (x, y)=>{
         speedX: 0,
         speedY: 0,
         reference: 'explosion',
-        width: 15,
-        height: 15,
+        width: 40,
+        height: 40,
         cropX: 0,
         cropY: 0,
         cropWidth: 100,
@@ -607,13 +627,13 @@ canvas1.addEventListener('mousemove', (e)=>{
 window.addEventListener('keydown', (e)=>{
     console.log('e.keyCode', e.keyCode);
     if (e.keyCode === 13) {
-        //  initSound('http://benoit-dev-demo.com/audio/morceau_piano_jeu.wav');
+        initSound('http://benoit-dev-demo.com/audio/Elemental_master_stage1_8bit.mp3', 0.2);
         active = true;
         alert('active');
     }
     if (e.keyCode === 32) {
         player.shoot();
-        initSound(getRandomShootSoundUrl());
+        initSound('http://benoit-dev-demo.com/audio/mixkit-short-laser-gun-shot-1670.wav', 0.1);
     }
     if (e.keyCode === 82) {
         console.log('player.direction ', player.direction);
@@ -656,6 +676,10 @@ const gameLoop = ()=>{
         particule.update();
         particule.draw();
     });
+    items1.forEach((item)=>{
+        item.update();
+        item.draw();
+    });
     if (delay === 30) {
         checkAllCollisions();
         delay = 0;
@@ -678,16 +702,29 @@ async function initGame() {
     await startScreenAnimation();
     gameActive = true;
     imageHandler.loadImages().then(async (data)=>{
-        displayHandler.drawHomeScreen('Start Game', 'Clic Enter', 'Press start');
+        displayHandler.drawHomeScreen('Elemental Remaster', '[Press Enter]', 'Version 2022');
+        const homePageImage = imageHandler.getImage('elemental-illustration');
+        displayHandler.draw({
+            img: homePageImage,
+            cropX: 0,
+            cropY: 0,
+            cropWidth: 500,
+            cropHeight: 500,
+            x: 50,
+            y: 200,
+            width: 400,
+            height: 400 // The height of the destination image
+        });
         await new Promise((resolve, reject)=>{
             window.addEventListener('keydown', (e)=>{
                 displayHandler.clearRect();
                 resolve('ok');
             });
         });
-        displayHandler.drawHomeScreen('Loading', '', '');
+        displayHandler.drawHomeScreen('Loading...', '', '');
         initSprites();
         setInterval(initEnemy, 10000);
+        setInterval(initItem, 5000);
         initParticule();
         //const gameBackgroundImage = createMapsheetImageHTMLElement();
         // backgroundHandler = new BackgroundHandler(0.7, imageHandler.getImage('map1'), displayHandler);
@@ -695,23 +732,18 @@ async function initGame() {
     });
 }
 async function startScreenAnimation() {
+    displayHandler.drawHomeScreen('Elemental', '', '2022 copyright');
     await new Promise((resolve, reject)=>{
         setTimeout(()=>{
-            displayHandler.drawHomeScreen('jeu', 'Clic Enter', 'copyright');
+            displayHandler.drawHomeScreen('Elemental Remaster', '', '2022 copyright');
             resolve('ok');
-        }, 1000);
+        }, 3000);
     });
     await new Promise((resolve, reject)=>{
         setTimeout(()=>{
-            displayHandler.drawHomeScreen('lop', 'Clic start', 'copyright');
+            displayHandler.drawHomeScreen('Elemental Remaster', 'Press Enter', '2022 copyright');
             resolve('ok');
-        }, 1000);
-    });
-    await new Promise((resolve, reject)=>{
-        setTimeout(()=>{
-            displayHandler.drawHomeScreen('Allez', 'Ensuite', 'année');
-            resolve('ok');
-        }, 1000);
+        }, 4000);
     });
     return new Promise((resolve, reject)=>{
         setTimeout(()=>{
@@ -729,12 +761,11 @@ function checkAllCollisions() {
             if (collisionHandler.checkCollision(enemy, bullet)) {
                 console.log('enemy.life', enemy.life);
                 console.log('bullet', bullet);
-                if (enemy.life > 0) {
-                    enemy.damage();
-                    initExplosion(enemy.x, enemy.y);
-                } else {
+                if (enemy.life > 0) enemy.damage();
+                else {
                     delete enemies[idx];
                     delete player.shootedBullets[index];
+                    initExplosion(enemy.x, enemy.y);
                 }
             }
         });
@@ -773,11 +804,12 @@ function createCanvasElement(width, height, idName) {
     canvas.height = height;
     return canvas;
 }
-function initSound(url) {
+function initSound(url, volume) {
     //const audio = document.getElementById('myPlayer');
     const audio = new Audio();
     audio.src = url;
     audio.autoplay = true;
+    audio.volume = volume;
     audio.onended = function() {
         audio.remove(); //on arrete le son à la fin de la piste
     };
@@ -805,7 +837,7 @@ function resetSprites() {
 }
 initGame();
 
-},{"./models/image-handler":"dNiUY","./models/display-handler":"68nTU","./models/player":"kBw1Q","./models/background-handler":"gCSiG","./models/collision-handler":"jg8rU","./models/enemy":"6Lm0A","./models/explosion":"7cHCu","./models/around":"9tmZH","./models/particule":"l7mQG"}],"dNiUY":[function(require,module,exports) {
+},{"./models/image-handler":"dNiUY","./models/display-handler":"68nTU","./models/player":"kBw1Q","./models/background-handler":"gCSiG","./models/collision-handler":"jg8rU","./models/enemy":"6Lm0A","./models/explosion":"7cHCu","./models/item":"iyvNj","./models/particule":"l7mQG","./models/game-character-data":"lMPwH"}],"dNiUY":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ImageHandler", ()=>ImageHandler
@@ -883,6 +915,30 @@ class ImageHandler {
                 belongsToMapsheetId: 1,
                 belongsToWorldId: 1,
                 filePath: 'http://benoit-dev-demo.com/img/sprites/character_ememy_set_3.png',
+                base64: false
+            },
+            {
+                type: 'illustration',
+                reference: 'elemental-illustration',
+                belongsToMapsheetId: 1,
+                belongsToWorldId: 1,
+                filePath: 'http://benoit-dev-demo.com/img/illustrations/elemental-illustration.jpeg',
+                base64: false
+            },
+            {
+                type: 'illustration',
+                reference: 'logo_md_green_red',
+                belongsToMapsheetId: 1,
+                belongsToWorldId: 1,
+                filePath: 'http://benoit-dev-demo.com/img/illustrations/logo_md_green_red.png',
+                base64: false
+            },
+            {
+                type: 'sprites',
+                reference: 'spritesheet_items_48x48',
+                belongsToMapsheetId: 1,
+                belongsToWorldId: 1,
+                filePath: 'http://benoit-dev-demo.com/img/tilesets/spritesheet_items_48x48.png',
                 base64: false
             }, 
         ];
@@ -976,10 +1032,11 @@ class DisplayHandler {
     }
     // Affiche des informations sur le héros
     drawDatas(entity3) {
+        const topMargin = 5;
         this.setFontSize(20);
         const message = `Life : ${entity3.life}  score : ${entity3.score}`;
         this.ctx.fillStyle = "#FFFFFF";
-        this.ctx.fillText(message, entity3.x, entity3.y);
+        this.ctx.fillText(message, entity3.x, entity3.y - topMargin);
     /* propriétés possibles pour le contexte */ // direction: "ltr"
     // fillStyle: "#ffffff"
     // filter: "none"
@@ -1005,9 +1062,9 @@ class DisplayHandler {
         // Background
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, 960, 720);
-        this.drawText(h1, 100, 500, '#FFFFFF', 50);
-        this.drawText(h2, 100, 300, '#FFFFFF', 30);
-        this.drawText(h3, 100, 200, '#FFFFFF', 10);
+        this.drawText(h1, 50, 150, '#FFFFFF', 110);
+        this.drawText(h2, 500, 500, '#FFFFFF', 50);
+        this.drawText(h3, 400, 700, '#FFFFFF', 30);
     }
     setFontSize(fontsize) {
         this.ctx.globalAlpha = 2;
@@ -1041,25 +1098,77 @@ class Player extends _sprite.Sprite {
         this.life = 10;
         this.score = 0;
         this.direction = 'north';
-        this.shoot = ()=>{
-            const shootedBullet = new _bullet.Bullet({
-                x: this.centerX,
-                y: this.direction === 'north' ? this.y - 10 : this.y + 50,
-                speedX: 0,
-                speedY: this.direction === 'north' ? -10 : 10,
-                reference: 'Fire_Bullet_Pixel_All_Reverse',
+        this.bulletTypeCrop = {
+            a: {
+                cropX: 240,
+                cropY: 63,
+                cropWidth: 32,
+                cropHeight: 40
+            },
+            b: {
+                cropX: 146,
+                cropY: 385,
+                cropWidth: 15,
+                cropHeight: 40
+            },
+            c: {
                 cropX: 162,
                 cropY: 116,
                 cropWidth: 30,
-                cropHeight: 30,
-                width: 20,
-                height: 20
-            }, this.imageHandler, this.displayHandler);
-            shootedBullet.setCoords({
-                x: this.centerX,
-                y: this.direction === 'north' ? this.y - 10 : this.y + 50
+                cropHeight: 30
+            }
+        };
+        this.bulletType = 'a';
+        this.shootTypes = {
+            first: [
+                0,
+                20,
+                40,
+                60,
+                80,
+                100,
+                120,
+                160,
+                180,
+                200,
+                220,
+                240,
+                260,
+                280,
+                300,
+                320,
+                340
+            ],
+            second: [
+                300
+            ],
+            third: [
+                280,
+                300,
+                320
+            ],
+            forth: [
+                270,
+                285,
+                300,
+                315,
+                330
+            ]
+        };
+        this.shootType = 'second';
+        this.shoot = ()=>{
+            let bulletSpeed = 5;
+            this.shootTypes[this.shootType].forEach((shootAngle)=>{
+                const positionX = this.x + Math.cos(shootAngle) * 50;
+                const positionY = this.y + Math.sin(shootAngle) * 50;
+                const deltaX = positionX - this.x;
+                const deltaY = positionY - this.y;
+                const magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const velocityScale = bulletSpeed / magnitude;
+                const speedX = deltaX * velocityScale;
+                const speedY = deltaY * velocityScale;
+                this.initBullet(positionX, positionY, speedX, speedY);
             });
-            this.shootedBullets.push(shootedBullet);
         };
         this.spriteImageCroper = new _srpiteImageCropper.SpriteImageCroper(attributes.characterName, 3);
     }
@@ -1086,6 +1195,26 @@ class Player extends _sprite.Sprite {
     }
     setDirection(direction) {
         this.direction = direction;
+    }
+    initBullet(x, y, speedX, speedY) {
+        const shootedBullet = new _bullet.Bullet({
+            x: x,
+            y: y,
+            speedX: speedX,
+            speedY: speedY,
+            reference: 'Fire_Bullet_Pixel_All_Reverse',
+            cropX: this.bulletTypeCrop[this.bulletType].cropX,
+            cropY: this.bulletTypeCrop[this.bulletType].cropY,
+            cropWidth: this.bulletTypeCrop[this.bulletType].cropWidth,
+            cropHeight: this.bulletTypeCrop[this.bulletType].cropHeight,
+            width: 32,
+            height: 40
+        }, this.imageHandler, this.displayHandler);
+        shootedBullet.setCoords({
+            x: this.centerX - 10,
+            y: this.direction === 'north' ? this.y - 10 : this.y + 50
+        });
+        this.shootedBullets.push(shootedBullet);
     }
 }
 
@@ -1123,9 +1252,12 @@ class Sprite {
         this.cropHeight = 720;
         this.life = 5;
         this.angle = 0;
+        this.activeBlink = false;
+        this.frame = 0;
         this.damage = ()=>{
             if (this.life === 0) return;
             this.life--;
+            this.activeBlink = true;
         };
         this.reference = attributes.reference;
         this.img = imageHandler.getImage(this.reference);
@@ -1157,7 +1289,14 @@ class Sprite {
         this.height = attributes4.height;
     }
     draw() {
-        this.displayHandler.draw(this);
+        this.frame++;
+        if (this.frame > 20) {
+            this.frame = 0;
+            this.activeBlink = false;
+        }
+        if (this.activeBlink) {
+            if (this.frame % 2 === 0) this.displayHandler.draw(this);
+        } else this.displayHandler.draw(this);
     }
     drawScore() {
         this.displayHandler.drawFloatingMessage(this);
@@ -1833,8 +1972,8 @@ class BackgroundHandler {
         this.buildRandomMapSheetArray();
     }
     update() {
-        if (this.cropY < 200) {
-            this.cropY = 6000;
+        if (this.cropY < 50) {
+            this.speed = 0;
             return;
         }
         this.cropY -= this.speed;
@@ -1880,12 +2019,12 @@ class Enemy extends _sprite.Sprite {
         this.shootedBullets = [];
         this.direction = 'south';
         this.shoot = ()=>{
-            if (Math.random() < 0.9999) return;
+            if (Math.random() < 0.99) return;
             // const ratio = (this.y - this.player.y) / (this.x - this.player.x);
             // const speedX = 1;
             // const speedY = speedX * ratio;
+            let bulletSpeed = 5;
             for(let i = 0; i < 360; i += 20){
-                const bulletSpeed = 0.5;
                 const positionX = this.x + Math.cos(i) * 50;
                 const positionY = this.y + Math.sin(i) * 50;
                 const deltaX = positionX - this.x;
@@ -2050,7 +2189,7 @@ class Explosion extends _sprite.Sprite {
         if (this.imagesCrops[this.cropIndex]) {
             this.cropX = this.imagesCrops[this.cropIndex].cropX;
             this.cropY = this.imagesCrops[this.cropIndex].cropY;
-            if (Math.random() > 0.5) this.cropIndex++;
+            if (Math.random() > 0.2) this.cropIndex++;
             return;
         }
         this.toDelete = true;
@@ -2063,112 +2202,18 @@ class Explosion extends _sprite.Sprite {
     }
 }
 
-},{"./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"9tmZH":[function(require,module,exports) {
+},{"./sprite":"3Hinm","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"iyvNj":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Around", ()=>Around
+parcelHelpers.export(exports, "Item", ()=>Item
 );
 var _sprite = require("./sprite");
-class Around extends _sprite.Sprite {
-    constructor(attributes, imageHandler, displayHandler, player){
+class Item extends _sprite.Sprite {
+    constructor(attributes, imageHandler, displayHandler){
         super(attributes, imageHandler, displayHandler);
-        this.player = player;
-        this.imagesCrops = [
-            {
-                cropX: 0,
-                cropY: 0
-            },
-            {
-                cropX: 200,
-                cropY: 0
-            },
-            {
-                cropX: 400,
-                cropY: 0
-            },
-            {
-                cropX: 600,
-                cropY: 0
-            },
-            {
-                cropX: 800,
-                cropY: 0
-            },
-            {
-                cropX: 0,
-                cropY: 200
-            },
-            {
-                cropX: 200,
-                cropY: 200
-            },
-            {
-                cropX: 400,
-                cropY: 200
-            },
-            {
-                cropX: 600,
-                cropY: 200
-            },
-            {
-                cropX: 800,
-                cropY: 200
-            },
-            {
-                cropX: 0,
-                cropY: 400
-            },
-            {
-                cropX: 200,
-                cropY: 400
-            },
-            {
-                cropX: 400,
-                cropY: 400
-            },
-            {
-                cropX: 600,
-                cropY: 400
-            },
-            {
-                cropX: 800,
-                cropY: 400
-            },
-            {
-                cropX: 0,
-                cropY: 600
-            },
-            {
-                cropX: 200,
-                cropY: 600
-            },
-            {
-                cropX: 400,
-                cropY: 600
-            },
-            {
-                cropX: 600,
-                cropY: 600
-            },
-            {
-                cropX: 800,
-                cropY: 600
-            }, 
-        ];
-        this.cropIndex = 0;
     }
     update() {
-        this.x = this.player.x;
-        this.y = this.player.y;
-        if (this.imagesCrops[this.cropIndex]) {
-            this.cropX = this.imagesCrops[this.cropIndex].cropX;
-            this.cropY = this.imagesCrops[this.cropIndex].cropY;
-            this.cropIndex++;
-            return;
-        }
-        this.cropIndex = 0;
-        this.cropX = this.imagesCrops[this.cropIndex].cropX;
-        this.cropY = this.imagesCrops[this.cropIndex].cropY;
+        this.y += this.speedY;
     }
     draw() {
         this.displayHandler.draw(this);

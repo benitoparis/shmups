@@ -46,12 +46,13 @@ export class DisplayHandler {
 
       // Affiche des informations sur le héros
       drawDatas(entity: any) {
+        const topMargin = 5;
 
         this.setFontSize(20);
 
         const message = `Life : ${entity.life}  score : ${entity.score}`;
         this.ctx.fillStyle = "#FFFFFF";
-        this.ctx.fillText(message, entity.x, entity.y);
+        this.ctx.fillText(message, entity.x, entity.y - topMargin);
 
 
         /* propriétés possibles pour le contexte */
@@ -84,9 +85,9 @@ export class DisplayHandler {
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, 960, 720);
 
-        this.drawText(h1, 100, 500, '#FFFFFF', 50);
-        this.drawText(h2, 100, 300, '#FFFFFF', 30);
-        this.drawText(h3, 100, 200, '#FFFFFF', 10);
+        this.drawText(h1, 50, 150, '#FFFFFF', 110);
+        this.drawText(h2, 500, 500, '#FFFFFF', 50);
+        this.drawText(h3, 400, 700, '#FFFFFF', 30);
 
       }
 

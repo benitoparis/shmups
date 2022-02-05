@@ -10,6 +10,11 @@ export class ImageHandler {
         {type: 'sprites', reference: 'hero', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/sprites/heros8.png', base64: false},
         {type: 'sprites', reference: 'Fire_Bullet_Pixel_All_Reverse', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/tilesets/Fire_Bullet_Pixel_All_Reverse.png', base64: false},
         {type: 'sprites', reference: 'character_ememy_set_3', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/sprites/character_ememy_set_3.png', base64: false},
+        {type: 'illustration', reference: 'elemental-illustration', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/illustrations/elemental-illustration.jpeg', base64: false},
+        {type: 'illustration', reference: 'logo_md_green_red', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/illustrations/logo_md_green_red.png', base64: false},
+        {type: 'sprites', reference: 'spritesheet_items_48x48', belongsToMapsheetId: 1, belongsToWorldId: 1, filePath: 'http://benoit-dev-demo.com/img/tilesets/spritesheet_items_48x48.png', base64: false},
+
+        
 
     ];
     imagesAssets: HTMLImageElement[] = [];

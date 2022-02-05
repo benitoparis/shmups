@@ -39,7 +39,6 @@ export class Enemy extends Sprite {
         //this.setDirection();
         this.setCropCoordinates();
         this.angle++;
-
         this.behavior();
         
         // if (Math.random() < 0.95) return;
@@ -53,19 +52,19 @@ export class Enemy extends Sprite {
 
     shoot = ()=> {
 
-        if (Math.random() < 0.9999) return;
+        if (Math.random() < 0.99) return;
 
         // const ratio = (this.y - this.player.y) / (this.x - this.player.x);
         // const speedX = 1;
         // const speedY = speedX * ratio;
 
+        let bulletSpeed = 5;
+
         for (let i = 0; i < 360; i +=20){
 
-            const bulletSpeed = 0.5;
             const positionX = this.x + Math.cos(i) * 50;
             const positionY = this.y + Math.sin(i) * 50;
             
-
             const deltaX = positionX - this.x;
             const deltaY = positionY - this.y;
 
