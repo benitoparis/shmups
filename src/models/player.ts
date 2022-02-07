@@ -23,7 +23,7 @@ export class Player extends Sprite {
         third: [280,300,320],
         forth: [270,285,300,315,330]
     };
-    shootType = 'second';
+    shootType = 'first';
 
     constructor(
         attributes: any,
@@ -39,7 +39,7 @@ export class Player extends Sprite {
         ) 
 
         this.spriteImageCroper = new SpriteImageCroper(
-            attributes.characterName,
+            attributes.cropCycles,
             3
         );
     }

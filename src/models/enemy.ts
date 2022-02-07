@@ -26,7 +26,7 @@ export class Enemy extends Sprite {
         );
 
         this.spriteImageCroper = new SpriteImageCroper(
-            attributes.characterName,
+            attributes.cropCycles,
             2
         );
 

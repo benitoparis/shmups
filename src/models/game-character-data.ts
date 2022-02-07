@@ -122,9 +122,6 @@ export class GameCharacterData {
                 ],
             },
         },
-
-/////////////////////////////
-
         { 
             characterName: 'rat',
             type: 'enemy',

@@ -9,10 +9,10 @@ import { Explosion } from "./models/explosion";
 import { Item } from "./models/item";
 import { Bullet } from "./models/bullet";
 import { Particule } from "./models/particule";
-import { GameCharacterData } from "./models/game-character-data";
+import { enemiesDatas, itemsDatas, imagesDatas, heroesDatas } from "./models/datas";
+
 
 //const canvas = document.getElementById('game') as HTMLCanvasElement;
-
 const canvas = createCanvasElement(960, 720,'game') as HTMLCanvasElement;
 const container = document.querySelector('.game-flex-container');
 container.appendChild(canvas);
@@ -22,7 +22,7 @@ container.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
 const displayHandler = new DisplayHandler(ctx);
-const imageHandler = new ImageHandler();
+const imageHandler = new ImageHandler(imagesDatas);
 
 let gameAnimationFrameRequestId: number;
 let backgroundHandler1: BackgroundHandler;
@@ -32,16 +32,15 @@ let enemies = [];
 let explosions = [];
 let particules = [];
 let player: Player;
-let enemyDatas = new GameCharacterData().data
-    .filter(character=> {
-        return character.type === 'enemy';
-    });
+// let enemyDatas = new GameCharacterData().data
+//     .filter(character=> {
+//         return character.type === 'enemy';
+//     });
 
 let items = [];
 var active = false;
-
 let gameActive = false;
-
+let delay = 0;
 
 function initPlayer(): void {
     player = new Player(
@@ -50,18 +49,18 @@ function initPlayer(): void {
             y: 0,
             speedX: 2,
             speedY: 2,
-            characterName: 'elemental-master',
-            reference: 'hero',
             cropX: 0,
             cropY: 0,
             width: 64,
             height: 64,
             cropWidth: 32,
-            cropHeight: 32
+            cropHeight: 32,
+            ...heroesDatas[0]
         },
         imageHandler,
         displayHandler
     );
+   
 }
 
 function initItem(): void {
@@ -71,14 +70,7 @@ function initItem(): void {
             y: 0,
             speedX: 0,
             speedY: 0.3,
-            characterName: '',
-            reference: 'spritesheet_items_48x48',
-            cropX: 240,
-            cropY: 384,
-            width: 32,
-            height: 32,
-            cropWidth: 48,
-            cropHeight: 48
+            ...itemsDatas[Math.floor(Math.random() * itemsDatas.length)]
         },
         imageHandler,
         displayHandler
@@ -87,8 +79,6 @@ function initItem(): void {
     item.setCoords({x: (Math.floor(Math.random() * 960)), y: 0});
     items.push(item);
 }
-
-
 
 function initParticule(): void {
     const particule = new Particule (
@@ -116,25 +106,18 @@ function initParticule(): void {
 
 function initEnemy(): void {
 
-    // Récupère les données d'un enemi à créer
-    const enemyData = enemyDatas[
-        Math.floor(Math.random() * enemyDatas.length - 1)
-    ];
-
     const enemy = new Enemy(
+
         {
+            width: 64,
+            height: 64,
+            cropWidth: 32,
+            cropHeight: 32,
             x: (Math.floor(Math.random() * 960)),
             y: 0,
             speedX: 2,
             speedY: 0.1,
-            characterName: enemyData.characterName,
-            reference: 'character_ememy_set_3',
-            cropX: 0,
-            cropY: 0,
-            width: 100,
-            height: 100,
-            cropWidth: 32,
-            cropHeight: 32
+            ...enemiesDatas[Math.floor(Math.random()*enemiesDatas.length)]
         },
         imageHandler,
         displayHandler,
@@ -179,6 +162,8 @@ function initEnemy(): void {
 
     enemy.setCoords({x: 400, y: 10});
     enemies.push(enemy);
+
+    
 }
 
 function initBackground(): void {
@@ -246,12 +231,11 @@ canvas.addEventListener('mousemove', (e: any)=> {
 
 window.addEventListener('keydown', (e: any)=> {
 
-    console.log('e.keyCode', e.keyCode);
+   
     
     if (e.keyCode === 13) { // Entrée
         initSound('http://benoit-dev-demo.com/audio/Elemental_master_stage1_8bit.mp3', 0.2);
         active = true;
-        alert('active');
     }
     if (e.keyCode === 32) { // Space
         player.shoot(); 
@@ -260,7 +244,7 @@ window.addEventListener('keydown', (e: any)=> {
 
     if (e.keyCode === 82) { // touche R
 
-        console.log('player.direction ', player.direction);
+        
         if (player.direction === 'north') {
             player.setDirection('south');
         } else {
@@ -272,7 +256,7 @@ window.addEventListener('keydown', (e: any)=> {
     
 });
 
-let delay = 0;
+
 const gameLoop = (): void => {
 
     // On clean le canvas
@@ -455,9 +439,6 @@ function checkAllCollisions(): void {
             player.shootedBullets.forEach((bullet: Bullet, index: number)=> {
                 if (collisionHandler.checkCollision(enemy, bullet)){
 
-                    console.log('enemy.life', enemy.life);
-                    console.log('bullet', bullet);
-
                     if (enemy.life > 0){
                         enemy.damage();
                   
@@ -480,6 +461,15 @@ function checkAllCollisions(): void {
             });
         }
 
+    });
+
+    items.forEach((item: Item, index: number)=> {
+        if (collisionHandler.checkCollision(item, player)) {
+            player.bulletType = item.playerBehavior.bulletType;
+            player.shootType =  item.playerBehavior.shootType;
+            delete items[index];
+        }
+        
     });
 }
 
@@ -509,15 +499,14 @@ function createMapsheetImageHTMLElement(): HTMLImageElement {
     }
 
     const dataUrl = canvas.toDataURL();
-    console.log('dataUrl', dataUrl);
-
+    
     const image = document.createElement('img');
     //image.crossOrigin = '*';
     image.src = dataUrl;
     image.style.width = `${widthSize}px`;
     image.style.height = `${heightSize}px`;
 
-    console.log('imageFoo', image);
+  
 
     //After you are done styling it, append it to the BODY element
     //document.body.appendChild(image);
@@ -533,7 +522,6 @@ function createCanvasElement(width: number, height: number, idName: string): HTM
     canvas.height = height;
     return canvas;
 }
-
 
 function initSound(url: string, volume: number): void {
   //const audio = document.getElementById('myPlayer');

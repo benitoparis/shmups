@@ -5,17 +5,22 @@ import { Sprite } from "./sprite";
 export class Item extends Sprite {
 
     type: string;
+    playerBehavior: any = {};
 
     constructor(
         attributes: any,
         imageHandler: ImageHandler,
         displayHandler: DisplayHandler
     ){
+
+        
         super (
             attributes,
             imageHandler,
             displayHandler
         );
+
+        this.playerBehavior = attributes.playerBehavior;
     }
 
     update() {
