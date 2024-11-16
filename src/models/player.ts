@@ -40,7 +40,10 @@ export class Player extends Sprite {
       this.imageHandler,
       this.displayHandler
     );
-    shootedBullet.setCoords({ x: this.centerX, y: this.y - 50 });
+    shootedBullet.setCoords({
+      x: this.x,
+      y: this.direction === 'north' ? this.y - 30 : this.y + 50,
+    });
     this.shootedBullets.push(shootedBullet);
   };
 
