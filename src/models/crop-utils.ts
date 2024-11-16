@@ -1,25 +1,16 @@
 export class CropUtils {
-    
-    itemDatas = [
-        {
-            itemName: '',
-            reference: '',
-            imageWidth: 23,
-            imageHeight: 34,
-            cropX: 12,
-            cropY: 12,
-        },
+  itemDatas = [
+    {
+      itemName: '',
+      reference: '',
+      imageWidth: 23,
+      imageHeight: 34,
+      cropX: 12,
+      cropY: 12,
+    },
+  ];
 
-    ];
-    
-    constructor(){}
+  constructor() {}
 
-
-    getItemCropCoords(itemName: number): void {
-
-    }
-
-
-
-
+  getItemCropCoords(itemName: number): void {}
 }

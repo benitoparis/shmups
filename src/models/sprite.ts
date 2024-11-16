@@ -1,80 +1,72 @@
-import { DisplayHandler } from "./display-handler";
-import { ImageHandler } from "./image-handler";
+import { DisplayHandler } from './display-handler';
+import { ImageHandler } from './image-handler';
 
 export class Sprite {
+  img: HTMLImageElement;
+  reference: string;
+  x: number;
+  y: number;
+  width: number = 960;
+  height: number = 720;
+  centerX: number;
+  centerY: number;
+  speedX: number;
+  speedY: number;
+  cropX = 0;
+  cropY = 0;
+  cropWidth = 960;
+  cropHeight = 720;
+  life = 5;
+  angle = 0;
 
-    img: HTMLImageElement;
-    reference: string;
-    x: number;
-    y: number;
-    width: number = 960;
-    height: number = 720;
-    centerX: number;
-    centerY: number;
-    speedX: number;
-    speedY: number;
-    cropX = 0;
-    cropY = 0;
-    cropWidth = 960;
-    cropHeight = 720;
-    life = 5;
-    angle = 0;
+  constructor(
+    attributes: any,
+    public imageHandler: ImageHandler,
+    public displayHandler: DisplayHandler
+  ) {
+    this.reference = attributes.reference;
+    this.img = imageHandler.getImage(this.reference);
 
+    this.setSpeed(attributes);
+    this.setCropCoords(attributes);
+    this.setDimensions(attributes);
+  }
 
-    constructor(
-        attributes: any,
-        public imageHandler: ImageHandler,
-        public displayHandler: DisplayHandler
-    ){
-        this.reference = attributes.reference;
-        this.img = imageHandler.getImage(this.reference);
+  setCenter(): void {
+    this.centerX = this.x + this.width / 2;
+    this.centerY = this.y + this.height / 2;
+  }
 
-        this.setSpeed(attributes);
-        this.setCropCoords(attributes);
-        this.setDimensions(attributes);
-    }
+  setCoords(attributes: any): void {
+    this.x = attributes.x;
+    this.y = attributes.y;
 
-    
-    setCenter(): void {
-        this.centerX = this.x + this.width / 2;
-        this.centerY = this.y + this.height / 2;
-    }
+    this.setCenter();
+  }
 
-    setCoords(attributes: any): void {
+  setSpeed(attributes: any): void {
+    this.speedX = attributes.speedX;
+    this.speedY = attributes.speedY;
+  }
 
-        this.x = attributes.x;
-        this.y = attributes.y;
+  setCropCoords(attributes: any): void {
+    this.cropX = attributes.cropX;
+    this.cropY = attributes.cropY;
+    this.cropWidth = attributes.cropWidth;
+    this.cropHeight = attributes.cropHeight;
+  }
 
-        this.setCenter();
-    }
+  setDimensions(attributes: any): void {
+    this.width = attributes.width;
+    this.height = attributes.height;
+  }
 
-    setSpeed(attributes: any): void {
-        this.speedX = attributes.speedX;
-        this.speedY = attributes.speedY;
-    }
+  draw(): void {
+    this.displayHandler.draw(this);
+  }
 
-    setCropCoords(attributes: any): void {
-        this.cropX = attributes.cropX;
-        this.cropY = attributes.cropY;
-        this.cropWidth = attributes.cropWidth;
-        this.cropHeight = attributes.cropHeight;
-        
-    }
-
-    setDimensions(attributes: any): void {
-        this.width = attributes.width;
-        this.height = attributes.height;
-        
-    }
-
-    draw(): void {
-        this.displayHandler.draw(this);
-    }
-
-    damage = ()=> {
-        if(this.life === 0) return;
-        this.life--;
-    }
-
-
+  damage = () => {
+    if (this.life === 0) return;
+    this.life--;
+  };
 }
