@@ -26,6 +26,8 @@ export class Explosion extends Sprite {
     { cropX: 800, cropY: 600 },
   ];
   cropIndex = 0;
+  // displayed tine in MS
+  timedisplayedMS = 10;
 
   constructor(
     attributes: any,
@@ -47,6 +49,7 @@ export class Explosion extends Sprite {
     this.cropIndex = 0;
     this.cropX = this.imagesCrops[this.cropIndex].cropX;
     this.cropY = this.imagesCrops[this.cropIndex].cropY;
+    this.timedisplayedMS--;
   }
 
   draw(): void {
