@@ -16,7 +16,7 @@ export class Sprite {
   cropY = 0;
   cropWidth = 960;
   cropHeight = 720;
-  life = 5;
+  life = 2;
   angle = 0;
 
   constructor(

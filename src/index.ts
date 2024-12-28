@@ -11,25 +11,36 @@ import { Particule } from './models/particule';
 
 //const canvas = document.getElementById('game') as HTMLCanvasElement;
 
-const canvas = createCanvasElement(960, 720, 'game') as HTMLCanvasElement;
-const container = document.querySelector('.game-flex-container');
-container.appendChild(canvas);
+const canvas = createCanvasElement(960, 720, 'game');
+const container = document.querySelector<Element>('.game-flex-container');
 
-//canvas.width = 960;
-//canvas.height = 720;
+if (container) {
+  container.appendChild(canvas);
+} else {
+  alert('CANVAS Tag does not exist');
+}
+
 const ctx = canvas.getContext('2d');
+
+if (!ctx) {
+  throw new Error('Impossible to get canvas context 2D.');
+}
+
 let gameAnimarionFrameRequestId: number;
 const displayHandler = new DisplayHandler(ctx);
+
 const imageHandler = new ImageHandler();
+
 let backgroundHandler1: BackgroundHandler;
 let backgroundHandler2: BackgroundHandler;
 
 let collisionHandler = new CollisionHandler();
-let enemies = [];
-let explosions = [];
-let particules = [];
+let enemies: Enemy[] = [];
+let explosions: Explosion[] = [];
+let particules: Particule[] = [];
 let weaponAround: Around;
-var active = false;
+
+let active = false;
 let player: Player;
 
 function initPlayer(): void {
@@ -185,7 +196,7 @@ function initSprites() {
   initBackground();
 }
 
-const initExplosion = () => {
+const initExplosion = (coords: { x: number; y: number }) => {
   const explosion = new Explosion(
     {
       x: Math.random() * 800,
@@ -204,7 +215,7 @@ const initExplosion = () => {
     displayHandler
   );
 
-  explosion.setCoords({ x: Math.random() * 800, y: Math.random() * 600 });
+  explosion.setCoords(coords);
 
   explosions.push(explosion);
 };
@@ -216,6 +227,17 @@ function deleteItemWhenOutOfBounds(items: any[]): void {
       items.splice(index, 1);
     }
   });
+}
+
+function deleteOldExplosions(): void {
+  // Filtrer les explosions qui doivent rester
+  const filteredExplosions = explosions.filter(
+    (explosion) => explosion.timedisplayedMS > 0
+  );
+
+  // Remplacer le contenu du tableau original
+  explosions.length = 0; // Vide le tableau existant
+  explosions.push(...filteredExplosions); // Réinsère les éléments filtrés
 }
 
 canvas.addEventListener('mousemove', (e: any) => {
@@ -290,8 +312,8 @@ const gameLoop = (): void => {
     particule.draw();
   });
 
-  weaponAround.update();
-  weaponAround.draw();
+  /*   weaponAround.update();
+  weaponAround.draw(); */
 
   if (delay === 60) {
     checkAllCollisions();
@@ -301,6 +323,7 @@ const gameLoop = (): void => {
   }
 
   //deleteItemWhenOutOfBounds(enemies);
+  deleteOldExplosions();
 
   gameAnimarionFrameRequestId = window.requestAnimationFrame(gameLoop);
 };
@@ -317,7 +340,7 @@ imageHandler.loadImages().then(async (data) => {
 
   initSprites();
   intWeaponAround();
-  setInterval(initEnemy, 10000);
+  setInterval(initEnemy, 20000);
   setInterval(initExplosion, 5000);
   //setInterval(InitParticule, 50);
 
@@ -341,10 +364,15 @@ function checkAllCollisions(): void {
           console.log('enemy.life', enemy.life);
           console.log('bullet', bullet);
 
+          alert('enemy hit');
+          console.log('enemy.life ', enemy.life);
+
           if (enemy.life > 0) {
             enemy.damage();
+
+            initExplosion({ x: bullet.centerX, y: bullet.centerY });
           } else {
-            alert('plus de crédit');
+            alert('ENEMY DEAD');
             delete enemies[idx];
             delete player.shootedBullets[index];
           }
@@ -360,6 +388,10 @@ function createMapsheetImageHTMLElement(): HTMLImageElement {
   const heightSize = 9600;
   const canvas = createCanvasElement(widthSize, heightSize, 'temporary');
   const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('Impossible to get canvas context 2D.');
+  }
 
   for (let col = 0; col < 20; col++) {
     for (let row = 0; row < 200; row++) {
@@ -394,11 +426,7 @@ function createMapsheetImageHTMLElement(): HTMLImageElement {
   return image;
 }
 
-function createCanvasElement(
-  width: number,
-  height: number,
-  idName: string
-): HTMLCanvasElement {
+function createCanvasElement(width: number, height: number, idName: string) {
   const canvas = document.createElement('canvas');
   canvas.setAttribute('id', idName);
   canvas.width = width;
